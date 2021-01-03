@@ -6,6 +6,7 @@ import { Option } from 'fp-ts/Option'
 import { FileContents } from './FileContents'
 import { FileExtension } from './FileExtension'
 import { FilePath } from './FilePath'
+import { ModuleSpecifier } from './ModuleSpecifier'
 
 export interface Document {
   readonly filePath: FilePath
@@ -17,7 +18,9 @@ export interface Document {
 }
 
 export interface Dependency {
+  readonly specifier: ModuleSpecifier
   readonly filePath: FilePath
+  readonly fileExtension: FileExtension
   readonly position: readonly [start: number, end: number]
 }
 
@@ -61,7 +64,9 @@ export namespace Document {
       contents: FileContents.schema(t),
       dependencies: t.array(
         t.type({
+          specifier: ModuleSpecifier.schema(t),
           filePath: FilePath.schema(t),
+          fileExtension: FileExtension.schema(t),
           position: t.tuple(t.number, t.number),
         }),
       ),

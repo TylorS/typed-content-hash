@@ -3,7 +3,10 @@ import { Effect, fromEnv, Resume } from '@typed/fp'
 import { ContentHash, Document, FilePath } from '../model'
 
 export interface GenerateContentHashes {
-  readonly generateContentHashes: (document: Document) => Resume<ReadonlyMap<FilePath, ContentHash>>
+  readonly generateContentHashes: (
+    document: Document,
+    hashLength?: number,
+  ) => Resume<ReadonlyMap<FilePath, ContentHash>>
 }
 
 /**
@@ -11,5 +14,6 @@ export interface GenerateContentHashes {
  */
 export const generateContentHashes = (
   contents: Document,
+  hashLength?: number,
 ): Effect<GenerateContentHashes, ReadonlyMap<FilePath, ContentHash>> =>
-  fromEnv((e: GenerateContentHashes) => e.generateContentHashes(contents))
+  fromEnv((e: GenerateContentHashes) => e.generateContentHashes(contents, hashLength))

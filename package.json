@@ -4,7 +4,8 @@
   "description": "Content hash a directory of HTML/JS/CSS files and other static assets",
   "main": "lib/index.js",
   "scripts": {
-    "build": "rimraf lib && tsc --outDir lib",
+    "start": "npx ts-node ./src/cli/content-hash --directory lib --hashLength 12",
+    "build": "rimraf lib && tsc --outDir lib --module esnext",
     "test": "concurrently 'npm:lint' 'npm:unit-test'",
     "unit-test": "typed-test",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx --fix",

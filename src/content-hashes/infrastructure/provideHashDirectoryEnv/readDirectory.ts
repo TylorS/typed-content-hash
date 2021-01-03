@@ -18,7 +18,7 @@ export function readDirectory(directory: Directory, manager: HashPluginManager) 
   return pipe(
     directory,
     readAllFilesRecursively,
-    chainResume((files) => zipResumes(files.map((file) => pipe(file, readDocumentWithManager(manager))))),
+    chainResume((files) => zipResumes(files.map(readDocumentWithManager(manager)))),
     mapResume((documents) => documents.filter(isSome).map((d) => d.value)),
   )
 }

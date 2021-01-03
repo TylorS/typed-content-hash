@@ -10,7 +10,7 @@ import {
   RewriteFileContent,
 } from '../../domain'
 
-export type HashPluginFactory<E> = (directory: Directory, env: E) => HashPlugin
+export type HashPluginFactory<E> = (directory: Directory, baseUrl: string | undefined, env: E) => HashPlugin
 
 export interface HashPlugin extends RewriteFileContent, GenerateContentHashes, RewriteDocumentHashes {
   // Directory HashPlugin is configured to work within

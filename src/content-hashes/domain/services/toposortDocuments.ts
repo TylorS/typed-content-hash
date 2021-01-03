@@ -10,7 +10,9 @@ export function toposortDocuments(documents: ReadonlyArray<Document>): ReadonlyA
     documents.flatMap((doc) =>
       doc.dependencies.map((dep): [string, string] => [FilePath.unwrap(doc.filePath), FilePath.unwrap(dep.filePath)]),
     ),
-  ).map(FilePath.wrap)
+  )
+    .map(FilePath.wrap)
+    .reverse()
   const ord = pipe(
     ordNumber,
     contramap((d: Document) => filePaths.indexOf(d.filePath)),

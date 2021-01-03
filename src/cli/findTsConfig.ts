@@ -67,7 +67,6 @@ function mergeConfigs(base: TsConfig, extension: TsConfig): TsConfig {
   }
 }
 
-// TODO: use environment to read file
 function parseConfigFile(directory: string, filePath: string, host: FormatDiagnosticsHost): TsConfig {
   const fileName = basename(filePath)
   const contents = fs.readFileSync(filePath).toString()

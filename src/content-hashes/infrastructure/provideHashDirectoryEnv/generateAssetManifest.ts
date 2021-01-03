@@ -1,8 +1,11 @@
 import { Resume, sync } from '@typed/fp'
-import { isSome } from 'fp-ts/lib/Option'
+import { isSome } from 'fp-ts/Option'
 import { relative } from 'path'
 
-import { AssetManifest, ContentHash, Directory, Document, FilePath, replaceHash } from '../../domain'
+import { AssetManifest, ContentHash, Directory, Document, FilePath, replaceDocumentHash } from '../../domain'
+
+const sourceMapPostfix = '.map'
+const sourceMapProxyPostfix = '.map.proxy.js'
 
 export const generateAssetManifest = (directory: Directory) => (
   documents: ReadonlyArray<Document>,
@@ -10,15 +13,21 @@ export const generateAssetManifest = (directory: Directory) => (
 ): Resume<AssetManifest> => {
   const assetManifest: Record<string, string> = {}
 
+  const getRelative = (filePath: FilePath) => relative(Directory.unwrap(directory), FilePath.unwrap(filePath))
+
   const addDocument = (document: Document, hash: ContentHash | undefined) => {
-    const to = hash ? replaceHash(document, hash).filePath : document.filePath
+    const from = getRelative(document.filePath)
+    const to = getRelative(hash ? replaceDocumentHash(document, hash).filePath : document.filePath)
 
-    assetManifest[relative(Directory.unwrap(directory), FilePath.unwrap(document.filePath))] = relative(
-      Directory.unwrap(directory),
-      FilePath.unwrap(to),
-    )
+    assetManifest[from] = to
 
-    return hash
+    if (isSome(document.sourceMap)) {
+      assetManifest[from + sourceMapPostfix] = to + sourceMapPostfix
+
+      if (isSome(document.sourceMap.value.proxy)) {
+        assetManifest[from + sourceMapProxyPostfix] = to + sourceMapProxyPostfix
+      }
+    }
   }
 
   for (const document of documents) {

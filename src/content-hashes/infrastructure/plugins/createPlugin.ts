@@ -2,12 +2,14 @@ import remapping from '@ampproject/remapping'
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { doEffect, fromTask, map, Pure, Resume, sync, toEnv, zip } from '@typed/fp'
 import { createHash } from 'crypto'
-import { pipe } from 'fp-ts/lib/function'
-import { fold, isSome, none, some } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
+import { fold, isSome, map as mapOption, none, some } from 'fp-ts/Option'
 import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
 import MagicString from 'magic-string'
+import { basename, dirname, relative } from 'path'
 
+import { applyOrigin } from '../../common/applyOrigin'
 import {
   ContentHash,
   Directory,
@@ -15,20 +17,22 @@ import {
   FileContents,
   FileExtension,
   FilePath,
+  getDtsPathFor,
+  getProxyMapFor,
+  getSourceMapPathFor,
+  replaceDocumentHash,
   replaceHash,
   SourceMap,
 } from '../../domain'
 import { HashPlugin } from '../provideHashDirectoryEnv'
-import { replaceFileHash } from './replaceFileHash'
+import { trimHash } from './trimHash'
+
+const dtsRegex = new RegExp(`.d.ts$`)
 
 const toResume = <A>(pure: Pure<A>): Resume<A> => toEnv(pure)({})
 const readContents = (path: FilePath) => readFile(FilePath.unwrap(path)).then((b) => FileContents.wrap(b.toString()))
 
-const jsRegex = /\.js$/
-
-const getSourceMapPathFor = (path: FilePath) => FilePath.wrap(FilePath.unwrap(path) + '.map')
-const getDtsPathFor = (path: FilePath) => FilePath.wrap(FilePath.unwrap(path).replace(jsRegex, '.d.ts'))
-const getProxyMapFor = (path: FilePath) => FilePath.wrap(FilePath.unwrap(path) + '.proxy.js')
+const ensureRelative = (path: string) => (path.startsWith('.') || path.startsWith('/') ? path : './' + path)
 
 type ReadDoc = (file: FilePath, fileExtension?: FileExtension) => Pure<Document>
 
@@ -44,6 +48,7 @@ const readDocument = (
     doEffect(function* () {
       const sourceMapPath = getSourceMapPathFor(filePath)
       const dtsPath = getDtsPathFor(filePath)
+
       const [contents, sourceMap, dts] = yield* zip([
         fromTask(() => readContents(filePath)),
         shouldGetSourceMap && existsSync(FilePath.unwrap(sourceMapPath))
@@ -93,9 +98,13 @@ const defaultHash = (document: Document) =>
 
 const documentToContentHashes = (
   document: Document,
+  hashLength: number,
   hash: ContentHash = defaultHash(document),
 ): ReadonlyMap<FilePath, ContentHash> => {
-  const map = new Map([[document.filePath, hash]])
+  // Trim hash to length
+  hash = pipe(hash, trimHash(hashLength))
+
+  let map = new Map([[document.filePath, hash]])
 
   if (isSome(document.sourceMap)) {
     const sourceMapPath = getSourceMapPathFor(document.filePath)
@@ -103,30 +112,45 @@ const documentToContentHashes = (
     map.set(sourceMapPath, hash)
 
     if (isSome(document.sourceMap.value.proxy)) {
-      map.set(getProxyMapFor(sourceMapPath), hash)
+      map = new Map([...map, ...documentToContentHashes(document.sourceMap.value.proxy.value, hashLength, hash)])
     }
   }
 
   if (isSome(document.dts)) {
-    return new Map([...map, ...documentToContentHashes(document.dts.value, hash)])
+    map = new Map([...map, ...documentToContentHashes(document.dts.value, hashLength, hash)])
   }
 
   return map
 }
 
-const rewriteFileContent = (document: Document, hashes: ReadonlyMap<FilePath, ContentHash>): Document => {
+// TODO: rewrite sourceMapURL
+const rewriteFileContent = (
+  directory: Directory,
+  baseUrl: string | undefined,
+  document: Document,
+  hashes: ReadonlyMap<FilePath, ContentHash>,
+): Document => {
   const file = FilePath.unwrap(document.filePath)
-
-  let ms = new MagicString(FileContents.unwrap(document.contents), {
+  const ms = new MagicString(FileContents.unwrap(document.contents), {
     filename: file,
     indentExclusionRanges: [],
   })
 
   for (const dep of document.dependencies) {
-    const depHash = hashes.get(dep.filePath)!
-    const path = replaceFileHash(FilePath.unwrap(dep.filePath), ContentHash.unwrap(depHash))
+    const depHash = hashes.get(dep.filePath)
 
-    ms = ms.overwrite(dep.position[0], dep.position[1], path)
+    if (depHash) {
+      const path = replaceHash(dep.filePath, dep.fileExtension, depHash)
+      const absolutePath = baseUrl ? applyOrigin(directory, dep.filePath, baseUrl) : ''
+      const relativePath = ensureRelative(relative(dirname(file), FilePath.unwrap(path)))
+      const replacement = dtsRegex.test(relativePath)
+        ? relativePath.replace(dtsRegex, '')
+        : baseUrl
+        ? absolutePath
+        : relativePath
+
+      ms.overwrite(dep.position[0], dep.position[1], replacement)
+    }
   }
 
   const updatedSourceMap = JSON.parse(
@@ -136,53 +160,95 @@ const rewriteFileContent = (document: Document, hashes: ReadonlyMap<FilePath, Co
   return {
     ...document,
     contents: FileContents.wrap(ms.toString()),
-    sourceMap: some(
-      pipe(
-        document.sourceMap,
-        fold(
-          (): SourceMap => ({ raw: updatedSourceMap, proxy: none }),
-          ({ raw, proxy }) => {
-            const remapped = JSON.parse(remapping([updatedSourceMap, raw], () => null).toString()) as RawSourceMap
+    sourceMap: pipe(
+      document.sourceMap,
+      fold(
+        (): SourceMap => ({ raw: updatedSourceMap, proxy: none }),
+        ({ raw, proxy }) => {
+          const remapped = JSON.parse(remapping([updatedSourceMap, raw], () => null).toString()) as RawSourceMap
 
-            return pipe(
-              proxy,
-              fold(
-                () => ({ raw: remapped, proxy: none }),
-                (proxyDoc) => ({ raw: remapped, proxy: some(rewriteFileContent(proxyDoc, hashes)) }),
-              ),
-            )
-          },
-        ),
+          return pipe(
+            proxy,
+            fold(
+              (): SourceMap => ({ raw: { ...remapped, file }, proxy: none }),
+              (proxyDoc) => ({
+                raw: { ...remapped },
+                proxy: some(rewriteFileContent(directory, baseUrl, proxyDoc, hashes)),
+              }),
+            ),
+          )
+        },
       ),
+      some,
     ),
     dts: pipe(
       document.dts,
       fold(
         () => none,
-        (doc) => some(rewriteFileContent(doc, hashes)),
+        (doc) => some(rewriteFileContent(directory, baseUrl, doc, hashes)),
       ),
     ),
   }
 }
 
-const rewriteDocumentHashes = (document: Document, hashes: ReadonlyMap<FilePath, ContentHash>) => {
-  const hash = hashes.get(document.filePath)!
+const rewriteDocumentHashes = (
+  directory: Directory,
+  document: Document,
+  hashes: ReadonlyMap<FilePath, ContentHash>,
+): Document => {
+  const hash = hashes.get(document.filePath)
+  const hashed = hash ? replaceDocumentHash(document, hash) : document
 
-  return hash ? replaceHash(document, hash) : document
+  return {
+    ...hashed,
+    sourceMap: pipe(
+      hashed.sourceMap,
+      mapOption(({ raw, proxy }) =>
+        pipe(
+          proxy,
+          fold(
+            (): SourceMap => ({
+              raw: { ...raw, file: pipe(hashed.filePath, getSourceMapPathFor, FilePath.unwrap, basename) },
+              proxy,
+            }),
+            (proxyDoc) => ({
+              raw: {
+                ...raw,
+                file: pipe(hashed.filePath, getSourceMapPathFor, getProxyMapFor, FilePath.unwrap, basename),
+              },
+              proxy: some(rewriteDocumentHashes(directory, proxyDoc, hashes)),
+            }),
+          ),
+        ),
+      ),
+    ),
+    dts: pipe(
+      hashed.dts,
+      fold(
+        () => none,
+        (doc) => some(rewriteDocumentHashes(directory, doc, hashes)),
+      ),
+    ),
+  }
 }
 
-export function createPlugin(directory: Directory, extensions: ReadonlyArray<string>): HashPlugin {
+export function createPlugin(
+  directory: Directory,
+  baseUrl: string | undefined,
+  extensions: ReadonlyArray<string>,
+): HashPlugin {
   const fileExtensions = extensions.map(FileExtension.wrap)
   const read = readDocument(fileExtensions, true, true)
 
   const plugin: HashPlugin = {
     directory,
     extensions: fileExtensions,
-    generateContentHashes: (document) => sync(documentToContentHashes(document)),
+    generateContentHashes: (document, hashLength = Infinity) => sync(documentToContentHashes(document, hashLength)),
     // TO BE OVERIDDEN AS NEEDED
     readDocument: (path) => pipe(path, read, toResume),
-    rewriteDocumentHashes: (documents, hashes) => sync(documents.map((doc) => rewriteDocumentHashes(doc, hashes))),
-    rewriteFileContent: (document, hashes) => sync(rewriteFileContent(document, hashes)),
+    rewriteDocumentHashes: (documents, hashes) =>
+      sync(documents.map((doc) => rewriteDocumentHashes(directory, doc, hashes))),
+    rewriteFileContent: (document, hashes) => sync(rewriteFileContent(directory, baseUrl, document, hashes)),
   }
 
   return plugin

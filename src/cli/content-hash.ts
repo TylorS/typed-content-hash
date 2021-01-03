@@ -1,13 +1,12 @@
-import { chain, execEffect } from '@typed/fp'
-import { pipe } from 'fp-ts/lib/function'
-import { map, toUndefined } from 'fp-ts/lib/Option'
+import { pipe } from 'fp-ts/function'
+import { getOrElse, map } from 'fp-ts/Option'
 import { existsSync, statSync } from 'fs'
 import { resolve } from 'path'
+import { getDefaultCompilerOptions } from 'typescript'
 import yargs from 'yargs'
 
-import { Directory, FilePath, hashDirectory, writeHashedDirectory } from '../content-hashes'
-import { deleteDocuments, provideHashDirectoryEnv, writeDocuments } from '../content-hashes/infrastructure'
 import { defaultPlugins } from '../content-hashes/infrastructure/plugins'
+import { rewriteDirectory } from '../content-hashes/rewriteDirectory'
 import { findTsConfig } from './findTsConfig'
 
 const options = yargs
@@ -20,32 +19,37 @@ const options = yargs
     type: 'string',
     default: 'asset-manifest.json',
   })
+  .options('hashLength', {
+    alias: 'h',
+    type: 'number',
+  })
   .options('tsConfig', {
     type: 'string',
     default: 'tsconfig.json',
+  })
+  .options('baseUrl', {
+    type: 'string',
   }).argv
 
-const resolvedDirectory = resolve(process.cwd(), options.directory)
+const directory = resolve(process.cwd(), options.directory)
 
-if (!existsSync(resolvedDirectory) || !statSync(resolvedDirectory).isDirectory()) {
-  throw new Error(`Unable to find valid directory at ${resolvedDirectory}`)
+if (!existsSync(directory) || !statSync(directory).isDirectory()) {
+  throw new Error(`Unable to find valid directory at ${directory}`)
 }
 
-const directory = Directory.wrap(resolvedDirectory)
 const tsConfig = findTsConfig({ directory: process.cwd(), configFileName: options.tsConfig })
 
-pipe(
-  hashDirectory,
-  chain(writeHashedDirectory),
-  provideHashDirectoryEnv(directory, defaultPlugins),
-  execEffect({
+rewriteDirectory({
+  directory: directory,
+  plugins: defaultPlugins,
+  hashLength: options.hashLength ?? Infinity,
+  pluginEnv: {
     compilerOptions: pipe(
       tsConfig,
       map((t) => t.compilerOptions),
-      toUndefined,
+      getOrElse(getDefaultCompilerOptions),
     ),
-    assetManifest: FilePath.wrap(resolve(resolvedDirectory, options.assetManifest)),
-    writeDocuments,
-    deleteDocuments,
-  }),
-)
+  },
+  assetManifest: resolve(directory, options.assetManifest),
+  baseUrl: options.baseUrl,
+})

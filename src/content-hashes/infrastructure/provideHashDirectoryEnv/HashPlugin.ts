@@ -12,7 +12,10 @@ import {
 
 export type HashPluginFactory<E> = (directory: Directory, baseUrl: string | undefined, env: E) => HashPlugin
 
-export interface HashPlugin extends RewriteFileContent, GenerateContentHashes, RewriteDocumentHashes {
+export interface HashPlugin
+  extends RewriteFileContent,
+    Omit<GenerateContentHashes, 'hashLength'>,
+    RewriteDocumentHashes {
   // Directory HashPlugin is configured to work within
   readonly directory: Directory
   // Supported File Extensions

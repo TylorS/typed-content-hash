@@ -58,6 +58,7 @@ const stripPostfix = (s: string) => {
   return s
 }
 
+// TODO: Support configuring these values?
 const EXTENSIONS: Record<string, readonly string[]> = {
   '.js': ['.js', '.css', '.json'],
   '.js.map.proxy.js': ['.js.map', '.map', '.js'],
@@ -72,7 +73,6 @@ const getExtensions = (extension: string) => {
   return [extension]
 }
 
-// TODO: Rewrite SourceMapURL
 export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
   directory,
   baseUrl,

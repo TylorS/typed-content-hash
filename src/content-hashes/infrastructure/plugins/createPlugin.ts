@@ -94,13 +94,13 @@ function getSourceMap(path: FilePath, readDoc: ReadDoc): Pure<SourceMap> {
   return eff
 }
 
-const defaultHash = (contents: FileContents) =>
+const createShaHash = (contents: FileContents) =>
   ContentHash.wrap(createHash('sha512').update(FileContents.unwrap(contents)).digest('hex'))
 
 const documentToContentHashes = (
   document: Document,
   hashLength: number,
-  hash: ContentHash = defaultHash(document.contents),
+  hash: ContentHash = createShaHash(document.contents),
 ): ReadonlyMap<FilePath, ContentHash> => {
   // Trim hash to length
   hash = pipe(hash, trimHash(hashLength))
@@ -130,7 +130,6 @@ const rewriteFileContent = (
   baseUrl: string | undefined,
   document: Document,
   hashes: ReadonlyMap<FilePath, ContentHash>,
-  hashLength: number,
 ): Document => {
   const file = FilePath.unwrap(document.filePath)
   const contents = FileContents.unwrap(document.contents)
@@ -156,12 +155,6 @@ const rewriteFileContent = (
     }
   }
 
-  // TODO: Figure out how to remove doing this twice
-  const hash = pipe(defaultHash(FileContents.wrap(ms.toString())), trimHash(hashLength))
-
-  // Rewrite or add the source map url
-  rewriteSourceMapUrl(ms, document.filePath, document.fileExtension, hash)
-
   const updatedSourceMap = JSON.parse(
     ms.generateMap({ hires: true, file, source: ms.original, includeContent: true }).toString(),
   ) as RawSourceMap
@@ -182,7 +175,7 @@ const rewriteFileContent = (
               (): SourceMap => ({ raw: { ...remapped, file }, proxy: none }),
               (proxyDoc) => ({
                 raw: { ...remapped },
-                proxy: some(rewriteFileContent(directory, baseUrl, proxyDoc, hashes, hashLength)),
+                proxy: some(rewriteFileContent(directory, baseUrl, proxyDoc, hashes)),
               }),
             ),
           )
@@ -194,7 +187,7 @@ const rewriteFileContent = (
       document.dts,
       fold(
         () => none,
-        (doc) => some(rewriteFileContent(directory, baseUrl, doc, hashes, hashLength)),
+        (doc) => some(rewriteFileContent(directory, baseUrl, doc, hashes)),
       ),
     ),
   }
@@ -206,9 +199,13 @@ const rewriteDocumentHashes = (
   hashes: ReadonlyMap<FilePath, ContentHash>,
 ): Document => {
   const hash = hashes.get(document.filePath)
-  const hashed = hash ? replaceDocumentHash(document, hash) : document
 
-  return {
+  if (!hash) {
+    return document
+  }
+
+  const hashed = replaceDocumentHash(document, hash)
+  const updated: Document = {
     ...hashed,
     sourceMap: pipe(
       hashed.sourceMap,
@@ -239,6 +236,53 @@ const rewriteDocumentHashes = (
       ),
     ),
   }
+
+  const file = FilePath.unwrap(updated.filePath)
+  const contents = FileContents.unwrap(updated.contents)
+  const ms = new MagicString(contents, {
+    filename: file,
+    indentExclusionRanges: [],
+  })
+
+  // Rewrite or add the source map url
+  rewriteSourceMapUrl(ms, document.filePath, document.fileExtension, hash)
+
+  const updatedSourceMap = JSON.parse(
+    ms.generateMap({ hires: true, file, source: ms.original, includeContent: true }).toString(),
+  ) as RawSourceMap
+
+  return {
+    ...updated,
+    contents: FileContents.wrap(ms.toString()),
+    sourceMap: pipe(
+      updated.sourceMap,
+      fold(
+        (): SourceMap => ({ raw: updatedSourceMap, proxy: none }),
+        ({ raw, proxy }) => {
+          const remapped = JSON.parse(remapping([updatedSourceMap, raw], () => null).toString()) as RawSourceMap
+
+          return pipe(
+            proxy,
+            fold(
+              (): SourceMap => ({ raw: { ...remapped, file }, proxy: none }),
+              (proxyDoc) => ({
+                raw: { ...remapped },
+                proxy: some(rewriteDocumentHashes(directory, proxyDoc, hashes)),
+              }),
+            ),
+          )
+        },
+      ),
+      some,
+    ),
+    dts: pipe(
+      updated.dts,
+      fold(
+        () => none,
+        (doc) => some(rewriteDocumentHashes(directory, doc, hashes)),
+      ),
+    ),
+  }
 }
 
 export function createPlugin(
@@ -257,8 +301,7 @@ export function createPlugin(
     readDocument: (path) => pipe(path, read, toResume),
     rewriteDocumentHashes: (documents, hashes) =>
       sync(documents.map((doc) => rewriteDocumentHashes(directory, doc, hashes))),
-    rewriteFileContent: (document, hashes, hashLength) =>
-      sync(rewriteFileContent(directory, baseUrl, document, hashes, hashLength)),
+    rewriteFileContent: (document, hashes) => sync(rewriteFileContent(directory, baseUrl, document, hashes)),
   }
 
   return plugin

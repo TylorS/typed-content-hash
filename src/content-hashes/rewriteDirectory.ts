@@ -14,12 +14,12 @@ import {
 } from './infrastructure'
 
 export type RewriteDirectoryOptions<Plugins extends ReadonlyArray<HashPluginFactory<any>>> = {
-  pluginEnv: HashPluginEnvs<Plugins>
-  directory: string
-  plugins: Plugins
-  hashLength: number
-  assetManifest: string
-  baseUrl?: string
+  readonly pluginEnv: HashPluginEnvs<Plugins>
+  readonly directory: string
+  readonly plugins: Plugins
+  readonly hashLength: number
+  readonly assetManifest: string
+  readonly baseUrl?: string
 }
 
 export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory<any>>>({

@@ -33,7 +33,7 @@ export interface HashDirectryEnvOptions<Plugins extends ReadonlyArray<HashPlugin
 export function provideHashDirectoryEnv<Plugins extends ReadonlyArray<HashPluginFactory<any>>>(
   options: HashDirectryEnvOptions<Plugins>,
 ): Provider<HashDirectoryEnv, HashPluginEnvs<Plugins>> {
-  const { directory, baseUrl, plugins, logLevel = LogLevel.Info, logPrefix = '', hashLength } = options
+  const { directory, baseUrl, plugins, logLevel = LogLevel.Info, logPrefix = '', hashLength = Infinity } = options
 
   return provideWith(
     doEffect(function* () {
@@ -49,6 +49,7 @@ export function provideHashDirectoryEnv<Plugins extends ReadonlyArray<HashPlugin
         logLevel,
         logPrefix: logPrefix ? gray(logPrefix) : '',
         logger: (s) => pipe(s, log, provideAll({ console })),
+        hashLength,
       }
 
       return hashDirectoryEnv

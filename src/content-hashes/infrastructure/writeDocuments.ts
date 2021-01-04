@@ -1,5 +1,5 @@
 import { fromTask, mapResume, toEnv } from '@typed/fp'
-import { isSome } from 'fp-ts/lib/Option'
+import { isSome } from 'fp-ts/Option'
 import { writeFile } from 'fs/promises'
 
 import { Document, FileContents, FilePath, getSourceMapPathFor } from '../domain'

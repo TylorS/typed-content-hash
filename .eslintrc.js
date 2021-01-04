@@ -33,13 +33,5 @@ module.exports = {
     'import/parsers': {
       '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
-    'import/resolver': {
-      'custom-alias': {
-        alias: {
-          '@typed/fp': './src',
-        },
-        extensions: ['.ts', '.tsx'],
-      },
-    },
   },
 }

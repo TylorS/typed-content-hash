@@ -1,5 +1,4 @@
-import { async, Resume, sync } from '@typed/fp'
-import { lazy } from '@typed/fp/Disposable/exports'
+import { fromTask, Pure } from '@typed/fp'
 import { pipe } from 'fp-ts/function'
 import * as O from 'fp-ts/Option'
 import resolve from 'resolve'
@@ -21,32 +20,31 @@ export function resolvePathFromSourceFile({
   directory,
   pathsResolver,
   extensions,
-}: ResolvePathFromSourceFileOptions): Resume<FilePath> {
+}: ResolvePathFromSourceFileOptions): Pure<FilePath> {
   const match = pipe(moduleSpecifier, O.fromPredicate(pathsResolver.isInPaths), O.chain(pathsResolver.resolvePath))
 
   if (O.isSome(match)) {
-    return sync(match.value)
+    return Pure.of(match.value)
   }
 
-  return async((resume) => {
-    const disposable = lazy()
+  return fromTask(
+    () =>
+      new Promise<FilePath>((res) =>
+        resolve(
+          moduleSpecifier,
+          {
+            basedir: directory,
+            moduleDirectory,
+            extensions,
+          },
+          (err, resolved) => {
+            if (!resolved || err) {
+              throw err
+            }
 
-    resolve(
-      moduleSpecifier,
-      {
-        basedir: directory,
-        moduleDirectory,
-        extensions,
-      },
-      (err, resolved) => {
-        if (!resolved || err) {
-          throw err
-        }
-
-        disposable.addDisposable(resume(FilePath.wrap(resolved)))
-      },
-    )
-
-    return disposable
-  })
+            res(FilePath.wrap(resolved))
+          },
+        ),
+      ),
+  )
 }

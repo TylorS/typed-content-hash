@@ -1,9 +1,10 @@
-import { Effect, fromEnv, Resume } from '@typed/fp'
+import { chain, Effect, fromEnv, Pure, sync } from '@typed/fp'
+import { identity } from 'fp-ts/function'
 
 import { ContentHash, Document, FilePath } from '../model'
 
 export interface GenerateContentHashes {
-  readonly generateContentHashes: (document: Document, hashLength: number) => Resume<ReadonlyMap<FilePath, ContentHash>>
+  readonly generateContentHashes: (document: Document, hashLength: number) => Pure<ReadonlyMap<FilePath, ContentHash>>
   readonly hashLength: number
 }
 
@@ -13,4 +14,7 @@ export interface GenerateContentHashes {
 export const generateContentHashes = (
   contents: Document,
 ): Effect<GenerateContentHashes, ReadonlyMap<FilePath, ContentHash>> =>
-  fromEnv((e: GenerateContentHashes) => e.generateContentHashes(contents, e.hashLength))
+  chain(
+    identity,
+    fromEnv((e: GenerateContentHashes) => sync(e.generateContentHashes(contents, e.hashLength))),
+  )

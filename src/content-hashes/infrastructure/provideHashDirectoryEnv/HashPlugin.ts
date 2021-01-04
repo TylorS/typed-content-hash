@@ -1,4 +1,4 @@
-import { Resume } from '@typed/fp'
+import { Pure } from '@typed/fp'
 
 import {
   Directory,
@@ -26,5 +26,5 @@ export interface HashPlugin
   // Supported File Extensions
   readonly extensions: ReadonlyArray<FileExtension>
   // How to read documents of supported extensions
-  readonly readDocument: (path: FilePath) => Resume<Document>
+  readonly readDocument: (path: FilePath) => Pure<Document>
 }

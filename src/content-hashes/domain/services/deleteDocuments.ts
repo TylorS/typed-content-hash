@@ -1,9 +1,9 @@
-import { doEffect, fromEnv, Resume } from '@typed/fp'
+import { ask, doEffect, Pure } from '@typed/fp'
 
 import { Document } from '../model'
 
 export interface DeleteDocuments {
-  readonly deleteDocuments: (documents: readonly Document[]) => Resume<void>
+  readonly deleteDocuments: (documents: readonly Document[]) => Pure<void>
 }
 
 /**
@@ -11,5 +11,7 @@ export interface DeleteDocuments {
  */
 export const deleteDocuments = (documents: readonly Document[]) =>
   doEffect(function* () {
-    yield* fromEnv((e: DeleteDocuments) => e.deleteDocuments(documents))
+    const { deleteDocuments } = yield* ask<DeleteDocuments>()
+
+    return yield* deleteDocuments(documents)
   })

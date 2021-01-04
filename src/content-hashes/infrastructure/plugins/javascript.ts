@@ -1,4 +1,4 @@
-import { chainResume, deepEqualsEq, isNotUndefined, mapResume, memoize, Resume } from '@typed/fp'
+import { chain, deepEqualsEq, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
 import { eqString, getStructEq, getTupleEq } from 'fp-ts/Eq'
 import { pipe } from 'fp-ts/function'
 import { isNone, some } from 'fp-ts/Option'
@@ -10,7 +10,6 @@ import { getDefaultCompilerOptions } from 'typescript'
 import { Dependency, Document, FileContents, FileExtension, FilePath } from '../../domain'
 import { ModuleSpecifier } from '../../domain/model/ModuleSpecifier'
 import { HashPlugin, HashPluginFactory } from '../provideHashDirectoryEnv'
-import { zipResumes } from '../provideHashDirectoryEnv/zipResumes'
 import { createPlugin } from './createPlugin'
 import { resolvePathFromSourceFile } from './resolvePathFromSourceFile'
 import { createResolveTsConfigPaths, TsConfigPathsResolver } from './resolveTsConfigPaths'
@@ -93,7 +92,7 @@ export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
 }
 
 function createReadDocument(base: HashPlugin, project: Project, pathsResolver: TsConfigPathsResolver) {
-  function findDependencies(document: Document): Resume<Document> {
+  function findDependencies(document: Document): Pure<Document> {
     const sourceFile =
       project.getSourceFile(FilePath.unwrap(document.filePath)) ||
       project.createSourceFile(FilePath.unwrap(document.filePath), FileContents.unwrap(document.contents))
@@ -119,7 +118,7 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
             pathsResolver,
             extensions: getExtensions(extension),
           }),
-          mapResume(
+          map(
             (filePath): Dependency => {
               const dep: Dependency = {
                 specifier: ModuleSpecifier.wrap(specifier),
@@ -133,12 +132,12 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
           ),
         )
       }),
-      zipResumes,
-      mapResume((dependencies): Document => ({ ...document, dependencies })),
+      zip,
+      map((dependencies): Document => ({ ...document, dependencies })),
     )
   }
 
-  function getDocumentDependencies(document: Document): Resume<Document> {
+  function getDocumentDependencies(document: Document): Pure<Document> {
     if (isNone(document.dts)) {
       return findDependencies(document)
     }
@@ -147,10 +146,10 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
     const dtsFile = findDependencies(document.dts.value)
 
     return pipe(
-      zipResumes([jsFile, dtsFile]),
-      mapResume(([js, dts]) => ({ ...js, dts: some(dts) })),
+      zip([jsFile, dtsFile]),
+      map(([js, dts]) => ({ ...js, dts: some(dts) })),
     )
   }
 
-  return (path: FilePath): Resume<Document> => pipe(path, base.readDocument, chainResume(getDocumentDependencies))
+  return (path: FilePath): Pure<Document> => pipe(path, base.readDocument, chain(getDocumentDependencies))
 }

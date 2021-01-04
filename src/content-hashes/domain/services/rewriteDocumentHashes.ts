@@ -1,4 +1,5 @@
-import { Effect, fromEnv, Resume } from '@typed/fp'
+import { chain, Effect, fromEnv, Pure, sync } from '@typed/fp'
+import { identity } from 'fp-ts/function'
 
 import { ContentHash, Document, FilePath } from '../model'
 
@@ -6,7 +7,7 @@ export interface RewriteDocumentHashes {
   readonly rewriteDocumentHashes: (
     documents: readonly Document[],
     hashes: ReadonlyMap<FilePath, ContentHash>,
-  ) => Resume<readonly Document[]>
+  ) => Pure<readonly Document[]>
 }
 
 /**
@@ -16,4 +17,7 @@ export const rewriteDocumentHashes = (
   documents: readonly Document[],
   hashes: ReadonlyMap<FilePath, ContentHash>,
 ): Effect<RewriteDocumentHashes, readonly Document[]> =>
-  fromEnv((e: RewriteDocumentHashes) => e.rewriteDocumentHashes(documents, hashes))
+  chain(
+    identity,
+    fromEnv((e: RewriteDocumentHashes) => sync(e.rewriteDocumentHashes(documents, hashes))),
+  )

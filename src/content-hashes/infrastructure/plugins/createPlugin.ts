@@ -1,6 +1,6 @@
 import remapping from '@ampproject/remapping'
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
-import { doEffect, fromTask, map, Pure, Resume, sync, toEnv, zip } from '@typed/fp'
+import { doEffect, fromTask, map, Pure, zip } from '@typed/fp'
 import { createHash } from 'crypto'
 import { pipe } from 'fp-ts/function'
 import { fold, isSome, map as mapOption, none, some } from 'fp-ts/Option'
@@ -30,7 +30,6 @@ import { trimHash } from './trimHash'
 
 const dtsRegex = new RegExp(`.d.ts$`)
 
-const toResume = <A>(pure: Pure<A>): Resume<A> => toEnv(pure)({})
 const readContents = (path: FilePath) => readFile(FilePath.unwrap(path)).then((b) => FileContents.wrap(b.toString()))
 
 const ensureRelative = (path: string) => (path.startsWith('.') || path.startsWith('/') ? path : './' + path)
@@ -124,7 +123,6 @@ const documentToContentHashes = (
   return map
 }
 
-// TODO: rewrite sourceMapURL
 const rewriteFileContent = (
   directory: Directory,
   baseUrl: string | undefined,
@@ -287,17 +285,19 @@ const rewriteDocumentHashes = (
 
 export function createPlugin({ directory, baseUrl }: HashPluginOptions, extensions: ReadonlyArray<string>): HashPlugin {
   const fileExtensions = extensions.map(FileExtension.wrap)
-  const read = readDocument(fileExtensions, true, true)
 
   const plugin: HashPlugin = {
     directory,
     extensions: fileExtensions,
-    generateContentHashes: (document, hashLength = Infinity) => sync(documentToContentHashes(document, hashLength)),
+    generateContentHashes: (document, hashLength = Infinity) =>
+      Pure.fromIO(() => documentToContentHashes(document, hashLength)),
+
     // TO BE OVERIDDEN AS NEEDED
-    readDocument: (path) => pipe(path, read, toResume),
+    readDocument: readDocument(fileExtensions, true, true),
     rewriteDocumentHashes: (documents, hashes) =>
-      sync(documents.map((doc) => rewriteDocumentHashes(directory, doc, hashes))),
-    rewriteFileContent: (document, hashes) => sync(rewriteFileContent(directory, baseUrl, document, hashes)),
+      Pure.fromIO(() => documents.map((doc) => rewriteDocumentHashes(directory, doc, hashes))),
+    rewriteFileContent: (document, hashes) =>
+      Pure.fromIO(() => rewriteFileContent(directory, baseUrl, document, hashes)),
   }
 
   return plugin

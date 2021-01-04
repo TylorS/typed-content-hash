@@ -38,3 +38,8 @@ If you're looking for plugins you'll currently want to poke in `src/content-hash
 ## Discussions
 
 We've enabled [Github Discussions](https://github.com/TylorS/typed-content-hash/discussions) if you would ever like to reach out about anything related to the project!
+
+## TODO
+
+- [ ] Support CSS w/ arbitrary file types
+- [ ] Support Rewriting HTML links/scripts/etc

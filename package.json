@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "Content hash a directory of HTML/JS/CSS files and other static assets",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "typings": "lib/index.d.ts",
+  "bin": "lib/cli/content-hash.js",
   "scripts": {
     "start": "npx ts-node ./src/cli/content-hash --directory lib --hashLength 12",
     "build": "rimraf lib && tsc --outDir lib --module esnext",

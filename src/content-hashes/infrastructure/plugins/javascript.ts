@@ -74,11 +74,10 @@ const getExtensions = (extension: string) => {
 }
 
 export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
-  directory,
-  baseUrl,
+  options,
   { compilerOptions = getDefaultCompilerOptions() },
 ) => {
-  const base = createPlugin(directory, baseUrl, ['.js'])
+  const base = createPlugin(options, ['.js'])
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
     compilerOptions: { ...compilerOptions, allowJs: true },

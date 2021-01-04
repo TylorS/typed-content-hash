@@ -14,22 +14,28 @@ const options = yargs
     alias: 'dir',
     type: 'string',
     demandOption: true,
+    description: 'The directory to apply content hashes',
   })
   .options('assetManifest', {
     type: 'string',
     default: 'asset-manifest.json',
+    description: 'Filename of asset manifest JSON',
   })
   .options('hashLength', {
     alias: 'h',
     type: 'number',
+    description: 'Number of characters to slice from SHA-512 hash',
   })
   .options('tsConfig', {
     type: 'string',
     default: 'tsconfig.json',
+    description: 'Relative path to tsconfig from CWD',
   })
   .options('baseUrl', {
     type: 'string',
-  }).argv
+    description: 'Base URL to use when rewriting imports/exports',
+  })
+  .help().argv
 
 const directory = resolve(process.cwd(), options.directory)
 

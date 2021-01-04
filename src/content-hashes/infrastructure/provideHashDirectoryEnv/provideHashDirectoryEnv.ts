@@ -38,7 +38,7 @@ export function provideHashDirectoryEnv<Plugins extends ReadonlyArray<HashPlugin
   return provideWith(
     doEffect(function* () {
       const env = yield* ask<HashPluginEnvs<Plugins>>()
-      const manager = new HashPluginManager(plugins.map((plugin) => plugin(directory, baseUrl, env)))
+      const manager = new HashPluginManager(plugins.map((plugin) => plugin({ directory, baseUrl }, env)))
       const hashDirectoryEnv: HashDirectoryEnv = {
         readDirectory: readDirectory(directory, manager),
         rewriteFileContent: rewriteFileContent(manager),

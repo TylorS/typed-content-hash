@@ -5,7 +5,9 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "typings": "lib/index.d.ts",
-  "bin": "lib/cli/content-hash.js",
+  "bin": {
+    "typed-content-hash": "lib/cli/content-hash.js"
+  },
   "scripts": {
     "start": "npx ts-node ./src/cli/content-hash --directory lib --hashLength 12",
     "build": "rimraf lib && tsc --outDir lib --module esnext",

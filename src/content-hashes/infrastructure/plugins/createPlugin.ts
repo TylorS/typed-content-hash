@@ -24,7 +24,7 @@ import {
   replaceHash,
   SourceMap,
 } from '../../domain'
-import { HashPlugin } from '../provideHashDirectoryEnv'
+import { HashPlugin, HashPluginOptions } from '../provideHashDirectoryEnv'
 import { rewriteSourceMapUrl } from './rewriteSourceMapUrl'
 import { trimHash } from './trimHash'
 
@@ -285,11 +285,7 @@ const rewriteDocumentHashes = (
   }
 }
 
-export function createPlugin(
-  directory: Directory,
-  baseUrl: string | undefined,
-  extensions: ReadonlyArray<string>,
-): HashPlugin {
+export function createPlugin({ directory, baseUrl }: HashPluginOptions, extensions: ReadonlyArray<string>): HashPlugin {
   const fileExtensions = extensions.map(FileExtension.wrap)
   const read = readDocument(fileExtensions, true, true)
 

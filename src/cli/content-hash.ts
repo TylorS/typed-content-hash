@@ -5,8 +5,7 @@ import { resolve } from 'path'
 import { getDefaultCompilerOptions } from 'typescript'
 import yargs from 'yargs'
 
-import { defaultPlugins } from '../content-hashes/infrastructure/plugins'
-import { rewriteDirectory } from '../content-hashes/rewriteDirectory'
+import { defaultPlugins, rewriteDirectory } from '../content-hashes'
 import { findTsConfig } from './findTsConfig'
 
 const options = yargs

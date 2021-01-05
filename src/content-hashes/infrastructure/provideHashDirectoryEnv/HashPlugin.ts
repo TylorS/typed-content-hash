@@ -13,6 +13,8 @@ import {
 export type HashPluginOptions = {
   readonly directory: Directory
   readonly baseUrl?: string | undefined
+  readonly sourceMaps?: boolean
+  readonly dts?: boolean
 }
 
 export type HashPluginFactory<E> = (options: HashPluginOptions, env: E) => HashPlugin

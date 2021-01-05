@@ -76,7 +76,7 @@ export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
   options,
   { compilerOptions = getDefaultCompilerOptions() },
 ) => {
-  const base = createPlugin(options, ['.js'])
+  const base = createPlugin({ ...options, dts: true, sourceMaps: true }, ['.js'])
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
     compilerOptions: { ...compilerOptions, allowJs: true },

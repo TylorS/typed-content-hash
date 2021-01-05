@@ -1,13 +1,12 @@
-import remapping from '@ampproject/remapping'
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { doEffect, fromTask, map, Pure, zip } from '@typed/fp'
 import { createHash } from 'crypto'
 import { pipe } from 'fp-ts/function'
-import { fold, isSome, map as mapOption, none, some } from 'fp-ts/Option'
+import { isSome, map as mapOption, none, some } from 'fp-ts/Option'
 import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
 import MagicString from 'magic-string'
-import { basename, dirname, relative } from 'path'
+import { dirname, relative } from 'path'
 
 import { applyOrigin } from '../../common/applyOrigin'
 import {
@@ -25,16 +24,49 @@ import {
   SourceMap,
 } from '../../domain'
 import { HashPlugin, HashPluginOptions } from '../provideHashDirectoryEnv'
+import { rewriteDocumentContents } from './rewriteDocumentContents'
 import { rewriteSourceMapUrl } from './rewriteSourceMapUrl'
 import { trimHash } from './trimHash'
 
 const dtsRegex = new RegExp(`.d.ts$`)
 
 const readContents = (path: FilePath) => readFile(FilePath.unwrap(path)).then((b) => FileContents.wrap(b.toString()))
-
 const ensureRelative = (path: string) => (path.startsWith('.') || path.startsWith('/') ? path : './' + path)
 
 type ReadDoc = (file: FilePath, fileExtension?: FileExtension) => Pure<Document>
+
+export function createPlugin(
+  { directory, baseUrl, sourceMaps = false, dts = false }: HashPluginOptions,
+  extensions: ReadonlyArray<string>,
+): HashPlugin {
+  const fileExtensions = extensions.map(FileExtension.wrap)
+
+  const plugin: HashPlugin = {
+    directory,
+    extensions: fileExtensions,
+    generateContentHashes: (document, hashLength = Infinity) =>
+      Pure.fromIO(() => documentToContentHashes(document, hashLength)),
+
+    // TO BE OVERIDDEN AS NEEDED
+
+    // Extend readDocument to add support for reading dependencies
+    readDocument: readDocument(fileExtensions, sourceMaps, dts),
+
+    // Extend to provide any additional rewrites BEFORE hashing the current Document.
+    // Will already handle rewriting all of your dependencies that should have Hashes.
+    rewriteFileContent: (
+      document,
+      hashes, //
+    ) => Pure.fromIO(() => rewriteFileContent(directory, baseUrl, document, hashes)),
+
+    // Extend to provide any additional rewrites AFTER hashing the current document.
+    // Will already rewrite your source map URLS with sourcemap support is enabled.
+    rewriteDocumentHashes: (documents, hashes) =>
+      Pure.fromIO(() => documents.map((doc) => rewriteDocumentHashes(doc, hashes, sourceMaps))), // HTML
+  }
+
+  return plugin
+}
 
 const readDocument = (
   extensions: readonly FileExtension[],
@@ -101,26 +133,47 @@ const documentToContentHashes = (
   hashLength: number,
   hash: ContentHash = createShaHash(document.contents),
 ): ReadonlyMap<FilePath, ContentHash> => {
-  // Trim hash to length
-  hash = pipe(hash, trimHash(hashLength))
+  const trimmedHash = pipe(hash, trimHash(hashLength))
 
-  let map = new Map([[document.filePath, hash]])
+  let map = new Map([[document.filePath, trimmedHash]])
 
   if (isSome(document.sourceMap)) {
     const sourceMapPath = getSourceMapPathFor(document.filePath)
 
-    map.set(sourceMapPath, hash)
+    map.set(sourceMapPath, trimmedHash)
 
     if (isSome(document.sourceMap.value.proxy)) {
-      map = new Map([...map, ...documentToContentHashes(document.sourceMap.value.proxy.value, hashLength, hash)])
+      map = new Map([...map, ...documentToContentHashes(document.sourceMap.value.proxy.value, hashLength, trimmedHash)])
     }
   }
 
   if (isSome(document.dts)) {
-    map = new Map([...map, ...documentToContentHashes(document.dts.value, hashLength, hash)])
+    map = new Map([...map, ...documentToContentHashes(document.dts.value, hashLength, trimmedHash)])
   }
 
   return map
+}
+
+const rewriteDependencies = (
+  document: Document,
+  hashes: ReadonlyMap<FilePath, ContentHash>,
+  directory: Directory,
+  baseUrl: string | undefined,
+) => (ms: MagicString) => {
+  for (const dep of document.dependencies) {
+    const depHash = hashes.get(dep.filePath)
+
+    if (depHash) {
+      const hashedPath = replaceHash(dep.filePath, dep.fileExtension, depHash)
+      const relativePath = ensureRelative(
+        relative(dirname(FilePath.unwrap(document.filePath)), FilePath.unwrap(hashedPath)),
+      )
+      const pathToUse = baseUrl ? applyOrigin(directory, dep.filePath, baseUrl) : relativePath
+      const replacementPath = dtsRegex.test(relativePath) ? relativePath.replace(dtsRegex, '') : pathToUse
+
+      ms.overwrite(dep.position[0], dep.position[1], replacementPath)
+    }
+  }
 }
 
 const rewriteFileContent = (
@@ -129,176 +182,37 @@ const rewriteFileContent = (
   document: Document,
   hashes: ReadonlyMap<FilePath, ContentHash>,
 ): Document => {
-  const file = FilePath.unwrap(document.filePath)
-  const contents = FileContents.unwrap(document.contents)
-  const ms = new MagicString(contents, {
-    filename: file,
-    indentExclusionRanges: [],
-  })
-
-  for (const dep of document.dependencies) {
-    const depHash = hashes.get(dep.filePath)
-
-    if (depHash) {
-      const path = replaceHash(dep.filePath, dep.fileExtension, depHash)
-      const absolutePath = baseUrl ? applyOrigin(directory, dep.filePath, baseUrl) : ''
-      const relativePath = ensureRelative(relative(dirname(file), FilePath.unwrap(path)))
-      const replacement = dtsRegex.test(relativePath)
-        ? relativePath.replace(dtsRegex, '')
-        : baseUrl
-        ? absolutePath
-        : relativePath
-
-      ms.overwrite(dep.position[0], dep.position[1], replacement)
-    }
-  }
-
-  const updatedSourceMap = JSON.parse(
-    ms.generateMap({ hires: true, file, source: ms.original, includeContent: true }).toString(),
-  ) as RawSourceMap
+  const base = rewriteDocumentContents(document, rewriteDependencies(document, hashes, directory, baseUrl))
+  const dts = pipe(
+    document.dts,
+    mapOption((d) => rewriteDocumentContents(d, rewriteDependencies(d, hashes, directory, baseUrl))),
+  )
 
   return {
-    ...document,
-    contents: FileContents.wrap(ms.toString()),
-    sourceMap: pipe(
-      document.sourceMap,
-      fold(
-        (): SourceMap => ({ raw: updatedSourceMap, proxy: none }),
-        ({ raw, proxy }) => {
-          const remapped = JSON.parse(remapping([updatedSourceMap, raw], () => null).toString()) as RawSourceMap
-
-          return pipe(
-            proxy,
-            fold(
-              (): SourceMap => ({ raw: { ...remapped, file }, proxy: none }),
-              (proxyDoc) => ({
-                raw: { ...remapped },
-                proxy: some(rewriteFileContent(directory, baseUrl, proxyDoc, hashes)),
-              }),
-            ),
-          )
-        },
-      ),
-      some,
-    ),
-    dts: pipe(
-      document.dts,
-      fold(
-        () => none,
-        (doc) => some(rewriteFileContent(directory, baseUrl, doc, hashes)),
-      ),
-    ),
+    ...base,
+    dts,
   }
 }
 
 const rewriteDocumentHashes = (
-  directory: Directory,
   document: Document,
   hashes: ReadonlyMap<FilePath, ContentHash>,
+  sourceMaps: boolean,
 ): Document => {
   const hash = hashes.get(document.filePath)
 
-  if (!hash) {
+  if (!sourceMaps || !hash) {
     return document
   }
 
-  const hashed = replaceDocumentHash(document, hash)
-  const updated: Document = {
-    ...hashed,
-    sourceMap: pipe(
-      hashed.sourceMap,
-      mapOption(({ raw, proxy }) =>
-        pipe(
-          proxy,
-          fold(
-            (): SourceMap => ({
-              raw: { ...raw, file: pipe(hashed.filePath, getSourceMapPathFor, FilePath.unwrap, basename) },
-              proxy,
-            }),
-            (proxyDoc) => ({
-              raw: {
-                ...raw,
-                file: pipe(hashed.filePath, getSourceMapPathFor, getProxyMapFor, FilePath.unwrap, basename),
-              },
-              proxy: some(rewriteDocumentHashes(directory, proxyDoc, hashes)),
-            }),
-          ),
-        ),
-      ),
-    ),
-    dts: pipe(
-      hashed.dts,
-      fold(
-        () => none,
-        (doc) => some(rewriteDocumentHashes(directory, doc, hashes)),
-      ),
-    ),
-  }
+  const updated = replaceDocumentHash(document, hash)
+  const base = rewriteDocumentContents(updated, (ms) =>
+    rewriteSourceMapUrl(ms, updated.filePath, updated.fileExtension, hash),
+  )
+  const dts = pipe(
+    updated.dts,
+    mapOption((d) => rewriteDocumentContents(d, (ms) => rewriteSourceMapUrl(ms, d.filePath, d.fileExtension, hash))),
+  )
 
-  const file = FilePath.unwrap(updated.filePath)
-  const contents = FileContents.unwrap(updated.contents)
-  const ms = new MagicString(contents, {
-    filename: file,
-    indentExclusionRanges: [],
-  })
-
-  // Rewrite or add the source map url
-  rewriteSourceMapUrl(ms, document.filePath, document.fileExtension, hash)
-
-  const updatedSourceMap = JSON.parse(
-    ms.generateMap({ hires: true, file, source: ms.original, includeContent: true }).toString(),
-  ) as RawSourceMap
-
-  return {
-    ...updated,
-    contents: FileContents.wrap(ms.toString()),
-    sourceMap: pipe(
-      updated.sourceMap,
-      fold(
-        (): SourceMap => ({ raw: updatedSourceMap, proxy: none }),
-        ({ raw, proxy }) => {
-          const remapped = JSON.parse(remapping([updatedSourceMap, raw], () => null).toString()) as RawSourceMap
-
-          return pipe(
-            proxy,
-            fold(
-              (): SourceMap => ({ raw: { ...remapped, file }, proxy: none }),
-              (proxyDoc) => ({
-                raw: { ...remapped },
-                proxy: some(rewriteDocumentHashes(directory, proxyDoc, hashes)),
-              }),
-            ),
-          )
-        },
-      ),
-      some,
-    ),
-    dts: pipe(
-      updated.dts,
-      fold(
-        () => none,
-        (doc) => some(rewriteDocumentHashes(directory, doc, hashes)),
-      ),
-    ),
-  }
-}
-
-export function createPlugin({ directory, baseUrl }: HashPluginOptions, extensions: ReadonlyArray<string>): HashPlugin {
-  const fileExtensions = extensions.map(FileExtension.wrap)
-
-  const plugin: HashPlugin = {
-    directory,
-    extensions: fileExtensions,
-    generateContentHashes: (document, hashLength = Infinity) =>
-      Pure.fromIO(() => documentToContentHashes(document, hashLength)),
-
-    // TO BE OVERIDDEN AS NEEDED
-    readDocument: readDocument(fileExtensions, true, true),
-    rewriteDocumentHashes: (documents, hashes) =>
-      Pure.fromIO(() => documents.map((doc) => rewriteDocumentHashes(directory, doc, hashes))),
-    rewriteFileContent: (document, hashes) =>
-      Pure.fromIO(() => rewriteFileContent(directory, baseUrl, document, hashes)),
-  }
-
-  return plugin
+  return { ...base, dts }
 }

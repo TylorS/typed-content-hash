@@ -1,3 +1,4 @@
+import base64url from 'base64url'
 import { createHash } from 'crypto'
 import { pipe } from 'fp-ts/function'
 import { isSome } from 'fp-ts/Option'
@@ -6,7 +7,7 @@ import { ContentHash, Document, FileContents, FilePath, getSourceMapPathFor } fr
 import { trimHash } from './trimHash'
 
 const createShaHash = (contents: FileContents) =>
-  ContentHash.wrap(createHash('sha512').update(FileContents.unwrap(contents)).digest('hex'))
+  ContentHash.wrap(base64url.fromBase64(createHash('sha512').update(FileContents.unwrap(contents)).digest('base64')))
 
 export const documentToContentHashes = (
   document: Document,

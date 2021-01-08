@@ -1,5 +1,5 @@
 import { ask, doEffect, Pure, zip } from '@typed/fp'
-import { isSome, Option } from 'fp-ts/Option'
+import { isSome, Option } from 'fp-ts/lib/Option'
 
 import { Document, FilePath } from '../model'
 

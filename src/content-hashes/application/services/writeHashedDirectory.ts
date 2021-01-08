@@ -1,6 +1,6 @@
 import { ask, doEffect, zip } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
-import { isSome, none } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { isSome, none } from 'fp-ts/lib/Option'
 import { extname } from 'path'
 
 import { info } from '../../common/logging'

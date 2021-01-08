@@ -1,5 +1,5 @@
 import { doEffect, fromTask, map, Pure, zip } from '@typed/fp'
-import { isSome } from 'fp-ts/Option'
+import { isSome } from 'fp-ts/lib/Option'
 import { promises } from 'fs'
 
 import { Document, FilePath, getSourceMapPathFor } from '../domain'

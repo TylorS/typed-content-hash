@@ -1,5 +1,5 @@
 import { And, ask, doEffect, log, provideAll, Provider, provideWith } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
+import { pipe } from 'fp-ts/lib/function'
 import { gray } from 'typed-colors'
 
 import { HashDirectoryEnv } from '../../application'

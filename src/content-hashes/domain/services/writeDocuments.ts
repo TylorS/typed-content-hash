@@ -1,5 +1,5 @@
 import { chain, fromEnv, Pure, sync } from '@typed/fp'
-import { identity } from 'fp-ts/function'
+import { identity } from 'fp-ts/lib/function'
 
 import { Document } from '../model'
 

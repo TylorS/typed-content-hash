@@ -1,7 +1,7 @@
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { createRuntimeSchema, createSchema, RuntimeSchema } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
-import { Option } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { Option } from 'fp-ts/lib/Option'
 
 import { FileContents } from './FileContents'
 import { FileExtension } from './FileExtension'

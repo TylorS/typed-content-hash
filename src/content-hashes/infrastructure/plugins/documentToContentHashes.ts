@@ -1,7 +1,7 @@
 import base64url from 'base64url'
 import { createHash } from 'crypto'
-import { pipe } from 'fp-ts/function'
-import { isSome } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { isSome } from 'fp-ts/lib/Option'
 
 import { ContentHash, Document, FileContents, FilePath, getSourceMapPathFor } from '../../domain'
 import { trimHash } from './trimHash'

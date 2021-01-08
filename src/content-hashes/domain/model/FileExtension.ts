@@ -1,6 +1,6 @@
 import { createRuntimeSchema } from '@typed/fp'
-import { flow, pipe } from 'fp-ts/function'
-import { some } from 'fp-ts/Option'
+import { flow, pipe } from 'fp-ts/lib/function'
+import { some } from 'fp-ts/lib/Option'
 import { iso, Newtype } from 'newtype-ts'
 
 export interface FileExtension extends Newtype<{ readonly FileExtension: unique symbol }, string> {}

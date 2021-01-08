@@ -1,5 +1,5 @@
-import { pipe } from 'fp-ts/function'
-import { map } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { map } from 'fp-ts/lib/Option'
 
 import { ContentHash, Document, FilePath, replaceDocumentHash } from '../../domain'
 import { rewriteDocumentContents } from './rewriteDocumentContents'

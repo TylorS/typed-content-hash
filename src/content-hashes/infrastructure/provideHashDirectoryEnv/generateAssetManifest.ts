@@ -1,5 +1,5 @@
 import { Resume, sync } from '@typed/fp'
-import { isSome } from 'fp-ts/Option'
+import { isSome } from 'fp-ts/lib/Option'
 import { relative } from 'path'
 
 import { AssetManifest, ContentHash, Directory, Document, FilePath, replaceDocumentHash } from '../../domain'

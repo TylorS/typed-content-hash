@@ -1,7 +1,7 @@
 import { chain, fromTask, map, Pure, zip } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
+import { pipe } from 'fp-ts/lib/function'
+import { isSome, none, some } from 'fp-ts/lib/Option'
 import { fst, snd } from 'fp-ts/lib/ReadonlyTuple'
-import { isSome, none, some } from 'fp-ts/Option'
 import fs from 'fs'
 import path from 'path'
 

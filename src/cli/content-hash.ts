@@ -1,5 +1,5 @@
-import { pipe } from 'fp-ts/function'
-import { getOrElse, map } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { getOrElse, map } from 'fp-ts/lib/Option'
 import { existsSync, statSync } from 'fs'
 import { resolve } from 'path'
 import { getDefaultCompilerOptions } from 'typescript'

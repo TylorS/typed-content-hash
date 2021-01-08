@@ -1,7 +1,7 @@
 import remapping from '@ampproject/remapping'
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
-import { pipe } from 'fp-ts/function'
-import { fold, none, some } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { fold, none, some } from 'fp-ts/lib/Option'
 import MagicString from 'magic-string'
 import { basename } from 'path'
 

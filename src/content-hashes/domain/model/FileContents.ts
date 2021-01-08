@@ -1,6 +1,6 @@
 import { createSchema } from '@typed/fp'
-import { flow } from 'fp-ts/function'
-import { some } from 'fp-ts/Option'
+import { flow } from 'fp-ts/lib/function'
+import { some } from 'fp-ts/lib/Option'
 import { iso, Newtype } from 'newtype-ts'
 
 export interface FileContents extends Newtype<{ readonly FileContents: unique symbol }, string> {}

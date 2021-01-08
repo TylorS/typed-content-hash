@@ -1,6 +1,6 @@
 import { chain, doEffect, fromTask, provideAll, toPromise } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
-import { none, some } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import { none, some } from 'fp-ts/lib/Option'
 import { existsSync, promises } from 'fs'
 import { extname, resolve } from 'path'
 

@@ -1,4 +1,4 @@
-import { isNone, none, Option, some } from 'fp-ts/Option'
+import { isNone, none, Option, some } from 'fp-ts/lib/Option'
 
 import { FileExtension, FilePath } from '../../domain'
 import { HashPlugin } from './HashPlugin'

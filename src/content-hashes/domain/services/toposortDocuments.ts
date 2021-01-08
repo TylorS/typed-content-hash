@@ -1,6 +1,6 @@
-import { pipe } from 'fp-ts/function'
-import { contramap, ordNumber } from 'fp-ts/Ord'
-import { sort } from 'fp-ts/ReadonlyArray'
+import { pipe } from 'fp-ts/lib/function'
+import { contramap, ordNumber } from 'fp-ts/lib/Ord'
+import { sort } from 'fp-ts/lib/ReadonlyArray'
 import toposort from 'toposort'
 
 import { Document, FilePath } from '../model'

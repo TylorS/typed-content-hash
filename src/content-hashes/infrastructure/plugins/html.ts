@@ -1,5 +1,5 @@
 import { doEffect, fromTask, zip } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
+import { pipe } from 'fp-ts/lib/function'
 import postHtml from 'posthtml'
 
 import { ContentHash, Document, FileContents, FilePath } from '../../domain'

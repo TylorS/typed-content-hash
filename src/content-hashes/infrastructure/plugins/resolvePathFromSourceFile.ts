@@ -1,6 +1,6 @@
 import { fromTask, Pure } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
-import * as O from 'fp-ts/Option'
+import { pipe } from 'fp-ts/lib/function'
+import * as O from 'fp-ts/lib/Option'
 import { extname } from 'path'
 import resolve from 'resolve'
 

@@ -1,5 +1,5 @@
 import { chain, fromEnv, Pure, sync } from '@typed/fp'
-import { identity, pipe } from 'fp-ts/function'
+import { identity, pipe } from 'fp-ts/lib/function'
 
 import { FilePath, Hashes } from '../model'
 

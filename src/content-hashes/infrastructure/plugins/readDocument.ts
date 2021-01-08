@@ -1,8 +1,8 @@
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { doEffect, fromTask, map, Pure, zip } from '@typed/fp'
-import { pipe } from 'fp-ts/function'
-import { map as mapOption, none, some } from 'fp-ts/Option'
-import { fst } from 'fp-ts/ReadonlyTuple'
+import { pipe } from 'fp-ts/lib/function'
+import { map as mapOption, none, some } from 'fp-ts/lib/Option'
+import { fst } from 'fp-ts/lib/ReadonlyTuple'
 import { existsSync, promises } from 'fs'
 import { extname } from 'path'
 

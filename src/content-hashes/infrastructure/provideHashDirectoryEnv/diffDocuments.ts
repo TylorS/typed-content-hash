@@ -1,7 +1,7 @@
 import { Resume, sync } from '@typed/fp'
 import { contramap, eqString } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
-import { difference } from 'fp-ts/ReadonlyArray'
+import { difference } from 'fp-ts/lib/ReadonlyArray'
 
 import { ContentHash, Document, DocumentDiff, FilePath } from '../../domain'
 

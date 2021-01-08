@@ -12,7 +12,6 @@ import { generatePathMap } from './generatePathMap'
 const rewritePaths = require('posthtml-rewrite-paths').default
 
 const search = {
-  '*': ['itemtype'],
   a: ['href', 'ping'],
   applet: ['archive', 'code', 'codebase', 'object', 'src'],
   area: ['href', 'ping'],
@@ -49,7 +48,7 @@ const search = {
   video: ['poster', 'src'],
 }
 export const htmlPlugin: HashPluginFactory<{}> = (options): HashPlugin => {
-  const base = createPlugin({ ...options, sourceMaps: false, dts: false }, ['.html'])
+  const base = createPlugin({ ...options, sourceMaps: false, dts: false, supportsHashes: false }, ['.html'])
 
   return {
     ...base,
@@ -67,6 +66,7 @@ function rewriteHtmlHash(options: HashPluginOptions, hashes: ReadonlyMap<FilePat
       return {
         ...document,
         contents: FileContents.wrap(html),
+        supportsHashes: false,
       }
     })
   }

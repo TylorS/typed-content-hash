@@ -16,7 +16,8 @@ export function generatePathMap(
 function applyRemounts(buildDirectory: Directory, baseUrl: string | undefined, path: FilePath) {
   return ([from, hash]: [FilePath, ContentHash]): ReadonlyArray<readonly [string, string]> => {
     const ext = pipe(from, FilePath.unwrap, extname, FileExtension.wrap)
-    const to = applyOrigin(buildDirectory, replaceHash(from, ext, hash), baseUrl)
+    const withOrigin = applyOrigin(buildDirectory, replaceHash(from, ext, hash), baseUrl)
+    const to = baseUrl ? withOrigin : ensureRelative(withOrigin)
     const absolutePath = relative(Directory.unwrap(buildDirectory), FilePath.unwrap(from))
     const relativePath = relative(
       pipe(path, FilePath.unwrap, dirname),
@@ -45,7 +46,7 @@ function ensureAbsolute(path: string): string {
 }
 
 function ensureRelative(path: string): string {
-  if (path[0] === '.') {
+  if (path[0] === '.' || path[0] === '/') {
     return path
   }
 

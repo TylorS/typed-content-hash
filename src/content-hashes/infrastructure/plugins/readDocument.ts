@@ -31,6 +31,7 @@ export const readDocument = (
   extensions: readonly FileExtension[],
   shouldGetSourceMap = true,
   shouldGetDtsFile = true,
+  supportsHashes = true,
 ): ReadDoc => {
   return (
     filePath: FilePath,
@@ -39,14 +40,13 @@ export const readDocument = (
     doEffect(function* () {
       const sourceMapPath = getSourceMapPathFor(filePath)
       const dtsPath = getDtsPathFor(filePath)
-
       const [contents, sourceMap, dts] = yield* zip([
         fromTask(() => readContents(filePath)),
         shouldGetSourceMap && existsSync(FilePath.unwrap(sourceMapPath))
-          ? map(some, getSourceMap(sourceMapPath, readDocument(extensions, false, false)))
+          ? map(some, getSourceMap(sourceMapPath, readDocument(extensions, false, false, supportsHashes)))
           : Pure.of(none),
         shouldGetDtsFile && existsSync(FilePath.unwrap(dtsPath))
-          ? map(some, readDocument(extensions, true, false)(dtsPath, FileExtension.wrap('.d.ts')))
+          ? map(some, readDocument(extensions, true, false, supportsHashes)(dtsPath, FileExtension.wrap('.d.ts')))
           : Pure.of(none),
       ] as const)
 
@@ -57,6 +57,7 @@ export const readDocument = (
         dependencies: [],
         sourceMap,
         dts: pipe(dts, mapOption(fst)),
+        supportsHashes: supportsHashes,
       }
 
       return [document, new Map()] as const

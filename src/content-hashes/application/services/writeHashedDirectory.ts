@@ -51,12 +51,15 @@ export interface WrittenDirectory extends Hashes {
   readonly assetManifest: Document
 }
 
-export function writeHashedDirectory({ created, deleted, hashes }: HashedDirectory) {
+export function writeHashedDirectory({ created, deleted, unchanged, hashes }: HashedDirectory) {
   const eff = doEffect(function* () {
     yield* info(`Hashing additional assets found...`)
 
-    const deletedFilePaths = new Set([...deleted.flatMap(getFilePaths)])
-    const filesToMove = Array.from(hashes.keys()).filter((path) => !deletedFilePaths.has(path))
+    const deletedFilePaths = new Set(deleted.flatMap(getFilePaths))
+    const unchangedFilePathsSupportHashes = new Map(unchanged.map((d) => [d.filePath, d.supportsHashes]))
+    const filesToMove = Array.from(hashes.keys()).filter(
+      (path) => !deletedFilePaths.has(path) && (unchangedFilePathsSupportHashes.get(path) ?? true),
+    )
     const documentsToMove = yield* readFiles(filesToMove)
     const hashedDocumentsToMove = documentsToMove.map((d) => replaceDocumentHash(d, hashes.get(d.filePath)!))
 
@@ -72,11 +75,17 @@ export function writeHashedDirectory({ created, deleted, hashes }: HashedDirecto
       dependencies: [],
       sourceMap: none,
       dts: none,
+      supportsHashes: false,
     }
 
     yield* info(`Writing changes to disk...`)
 
-    const documentsToWrite: ReadonlyArray<Document> = [...created, ...hashedDocumentsToMove, assetManifestDocument]
+    const documentsToWrite: ReadonlyArray<Document> = [
+      ...hashedDocumentsToMove,
+      ...created,
+      ...unchanged,
+      assetManifestDocument,
+    ]
 
     yield* zip([writeDocuments(documentsToWrite), deleteDocuments(documentsToDelete)])
 

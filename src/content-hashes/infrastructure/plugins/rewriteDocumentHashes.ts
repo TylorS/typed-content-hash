@@ -12,11 +12,11 @@ export const rewriteDocumentHashes = (
 ): Document => {
   const hash = hashes.get(document.filePath)
 
-  if (!sourceMaps || !hash) {
+  if (!sourceMaps) {
     return document
   }
 
-  const updated = replaceDocumentHash(document, hash)
+  const updated = document.supportsHashes && hash ? replaceDocumentHash(document, hash) : document
   const base = rewriteDocumentContents(updated, (document, ms) => rewriteSourceMapUrl(ms, document.filePath))
   const dts = pipe(
     updated.dts,

@@ -15,6 +15,7 @@ export interface Document {
   readonly dependencies: ReadonlyArray<Dependency>
   readonly sourceMap: Option<SourceMap>
   readonly dts: Option<Document>
+  readonly supportsHashes: boolean
 }
 
 export interface Dependency {
@@ -72,6 +73,7 @@ export namespace Document {
       ),
       sourceMap: t.option(SourceMap.schema(t)),
       dts: t.option(t.lazy('Document', () => Document.schema(t))),
+      supportsHashes: t.boolean,
     }),
   )
 }

@@ -11,5 +11,13 @@ import { Directory, FilePath } from '../domain'
 export function applyOrigin(buildDirectory: Directory, file: FilePath, origin?: string): string {
   const relativePath = relative(Directory.unwrap(buildDirectory), FilePath.unwrap(file))
 
-  return origin ? resolve(origin, relativePath) : relativePath
+  return origin ? resolve(origin, relativePath) : ensureRelative(relativePath)
+}
+
+function ensureRelative(path: string): string {
+  if (path[0] === '.' || path[0] === '/') {
+    return path
+  }
+
+  return './' + path
 }

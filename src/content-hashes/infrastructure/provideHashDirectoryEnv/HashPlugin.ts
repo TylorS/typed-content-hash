@@ -17,6 +17,7 @@ export type HashPluginOptions = {
   readonly baseUrl?: string | undefined
   readonly sourceMaps?: boolean
   readonly dts?: boolean
+  readonly supportsHashes?: boolean
 }
 
 export type HashPluginFactory<E> = (options: HashPluginOptions, env: E) => HashPlugin

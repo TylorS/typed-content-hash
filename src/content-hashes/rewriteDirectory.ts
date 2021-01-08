@@ -62,6 +62,7 @@ export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory
             dependencies: [],
             sourceMap: none,
             dts: none,
+            supportsHashes: true,
           }
 
           return some(document)

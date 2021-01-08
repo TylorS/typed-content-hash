@@ -18,6 +18,10 @@ export const documentToContentHashes = (
   hashLength: number,
   hash: ContentHash = createShaHash(document.contents),
 ): ReadonlyMap<FilePath, ContentHash> => {
+  if (!document.supportsHashes) {
+    return new Map()
+  }
+
   const trimmedHash = pipe(hash, trimHash(hashLength))
 
   let map = new Map([[document.filePath, trimmedHash]])

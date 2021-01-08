@@ -54,7 +54,6 @@ const search = {
   video: { poster: true, src: true },
 }
 
-// TODO: overwrite rewriteDocumentHashes to update all hashes
 export const htmlPlugin: HashPluginFactory<{}> = (options): HashPlugin => {
   const base = createPlugin(options, ['.html'])
 

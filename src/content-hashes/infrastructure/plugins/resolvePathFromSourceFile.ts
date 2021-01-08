@@ -1,6 +1,7 @@
 import { fromTask, Pure } from '@typed/fp'
 import { pipe } from 'fp-ts/function'
 import * as O from 'fp-ts/Option'
+import { extname } from 'path'
 import resolve from 'resolve'
 
 import { FilePath } from '../../domain'
@@ -36,6 +37,14 @@ export function resolvePathFromSourceFile({
             basedir: directory,
             moduleDirectory,
             extensions,
+            packageIterator: (request, _, defaultCanditates) => {
+              try {
+                // Attempt to add the current extension to those being looked up
+                return [extname(request), ...defaultCanditates()]
+              } catch {
+                return defaultCanditates()
+              }
+            },
           },
           (err, resolved) => {
             if (!resolved || err) {

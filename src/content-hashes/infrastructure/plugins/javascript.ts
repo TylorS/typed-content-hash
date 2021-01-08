@@ -58,7 +58,6 @@ const stripPostfix = (s: string) => {
   return s
 }
 
-// TODO: Support configuring these values?
 const EXTENSIONS: Record<string, readonly string[]> = {
   '.js': ['.js', '.css', '.json'],
   '.js.map.proxy.js': ['.js.map', '.map', '.js'],

@@ -13,7 +13,8 @@ const urlImport = join(testFixtures, 'url-import.css')
 export const test = describe(`cssPlugin`, () => {
   describe(`given HashPluginOptions`, () => {
     it(`returns a HashPlugin that parses @imports and url()s`, (done) => {
-      const plugin = cssPlugin({ directory: Directory.wrap(testFixtures), hashLength: 12 }, {})
+      const hashLength = 12
+      const plugin = cssPlugin({ directory: Directory.wrap(testFixtures), hashLength }, {})
 
       const expectedAtRuleDeps: readonly Dependency[] = [
         {
@@ -35,7 +36,12 @@ export const test = describe(`cssPlugin`, () => {
       const expectedUrlHashes: Hashes['hashes'] = new Map([
         [
           expectedUrlDeps[0].filePath,
-          ContentHash.wrap('SqTwlyhFaQu3dLbn19MVS9jrp91n34OyLW63Tz8YiaMhi3dSpANixMKC0uz-scQnXZO1dsrsuiZdc8kVKhh-Pw'),
+          ContentHash.wrap(
+            'SqTwlyhFaQu3dLbn19MVS9jrp91n34OyLW63Tz8YiaMhi3dSpANixMKC0uz-scQnXZO1dsrsuiZdc8kVKhh-Pw'.slice(
+              0,
+              hashLength,
+            ),
+          ),
         ],
       ])
 

@@ -26,16 +26,16 @@ export const cssPlugin: HashPluginFactory<{}> = (options): HashPlugin => {
 
   return {
     ...base,
-    readDocument: createReadDocument(base),
+    readDocument: createReadDocument(base, options.hashLength),
   }
 }
 
-function createReadDocument(base: HashPlugin) {
+function createReadDocument(base: HashPlugin, hashLength: number) {
   return function (path: FilePath) {
     const eff = doEffect(function* () {
       const [document, hashes] = yield* base.readDocument(path)
 
-      return findDependencies(document, hashes)
+      return findDependencies(document, hashes, hashLength)
     })
 
     return eff
@@ -45,6 +45,7 @@ function createReadDocument(base: HashPlugin) {
 function findDependencies(
   document: Document,
   hashes: ReadonlyMap<FilePath, ContentHash>,
+  hashLength: number,
 ): readonly [Document, Hashes['hashes']] {
   const filename = basename(FilePath.unwrap(document.filePath))
   const contents = FileContents.unwrap(document.contents)
@@ -60,8 +61,8 @@ function findDependencies(
   walk(ast, (node) =>
     cond(
       [
-        cond.create(isAtRule, (node) => add(...parseAtRule(document.filePath, node))),
-        cond.create(isUrl, (node) => add(...parseUrl(document.filePath, node))),
+        cond.create(isAtRule, (node) => add(...parseAtRule(document.filePath, node, hashLength))),
+        cond.create(isUrl, (node) => add(...parseUrl(document.filePath, node, hashLength))),
       ],
       node,
     ),
@@ -103,12 +104,12 @@ const findAtRuleSpecifier = (rule: NonNullableKeys<Atrule, 'loc'>): SpecifierPos
   return null
 }
 
-const parseAtRule = (filePath: FilePath, rule: NonNullableKeys<Atrule, 'loc'>) => {
+const parseAtRule = (filePath: FilePath, rule: NonNullableKeys<Atrule, 'loc'>, hashLength: number) => {
   const dependencies: Dependency[] = []
   const hashes = new Map<FilePath, ContentHash>()
   const specifier = findAtRuleSpecifier(rule)
 
-  addDependency(filePath, dependencies, hashes, specifier)
+  addDependency(filePath, dependencies, hashLength, hashes, specifier)
 
   return [dependencies, hashes] as const
 }
@@ -137,12 +138,12 @@ const findUrlSpecifier = (url: NonNullableKeys<Url, 'loc'>): SpecifierPosition |
   return null
 }
 
-const parseUrl = (filePath: FilePath, url: NonNullableKeys<Url, 'loc'>) => {
+const parseUrl = (filePath: FilePath, url: NonNullableKeys<Url, 'loc'>, hashLength: number) => {
   const dependencies: Dependency[] = []
   const hashes = new Map<FilePath, ContentHash>()
   const specifier = findUrlSpecifier(url)
 
-  addDependency(filePath, dependencies, hashes, specifier)
+  addDependency(filePath, dependencies, hashLength, hashes, specifier)
 
   return [dependencies, hashes] as const
 }
@@ -150,6 +151,7 @@ const parseUrl = (filePath: FilePath, url: NonNullableKeys<Url, 'loc'>) => {
 function addDependency(
   filePath: FilePath,
   dependencies: Dependency[],
+  hashLength: number,
   hashes: Map<FilePath, ContentHash>,
   specifier: SpecifierPosition | null,
 ) {
@@ -170,7 +172,10 @@ function addDependency(
 
       // Create hashes of these files too, they'll be moved later.
       if (ext !== '.css') {
-        hashes.set(FilePath.wrap(depPath), createShaHash(FileContents.wrap(readFileSync(depPath).toString('base64'))))
+        hashes.set(
+          FilePath.wrap(depPath),
+          createShaHash(FileContents.wrap(readFileSync(depPath).toString('base64')), hashLength),
+        )
       }
 
       dependencies.push({

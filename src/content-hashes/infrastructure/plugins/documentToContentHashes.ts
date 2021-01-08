@@ -6,8 +6,12 @@ import { isSome } from 'fp-ts/Option'
 import { ContentHash, Document, FileContents, FilePath, getSourceMapPathFor } from '../../domain'
 import { trimHash } from './trimHash'
 
-export const createShaHash = (contents: FileContents) =>
-  ContentHash.wrap(base64url.fromBase64(createHash('sha512').update(FileContents.unwrap(contents)).digest('base64')))
+export const createShaHash = (contents: FileContents, hashLength = Infinity) =>
+  ContentHash.wrap(
+    base64url
+      .fromBase64(createHash('sha512').update(FileContents.unwrap(contents)).digest('base64'))
+      .slice(0, hashLength),
+  )
 
 export const documentToContentHashes = (
   document: Document,

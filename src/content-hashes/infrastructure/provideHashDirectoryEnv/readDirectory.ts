@@ -1,10 +1,11 @@
 import { chain, fromTask, map, Pure, zip } from '@typed/fp'
 import { pipe } from 'fp-ts/function'
+import { fst, snd } from 'fp-ts/lib/ReadonlyTuple'
 import { isSome, none, some } from 'fp-ts/Option'
 import fs from 'fs'
 import path from 'path'
 
-import { Directory, FilePath } from '../../domain'
+import { ContentHash, Directory, Document, FilePath } from '../../domain'
 import { HashPluginManager } from './PluginManager'
 
 const resolve = (directory: Directory, pathLike: string) => path.resolve(Directory.unwrap(directory), pathLike)
@@ -13,12 +14,18 @@ const readdir = (directory: Directory) => fromTask(() => fs.promises.readdir(Dir
 const isFile = (pathLike: string) => fs.existsSync(pathLike) && fs.statSync(pathLike).isFile()
 const isDirectory = (pathLike: string) => fs.existsSync(pathLike) && fs.statSync(pathLike).isDirectory()
 
+const combineValues = (documents: ReadonlyArray<readonly [Document, ReadonlyMap<FilePath, ContentHash>]>) =>
+  [
+    documents.map(fst),
+    documents.map(snd).reduce((a, b) => new Map([...a, ...b]), new Map<FilePath, ContentHash>()),
+  ] as const
+
 export function readDirectory(directory: Directory, manager: HashPluginManager) {
   return pipe(
     directory,
     readAllFilesRecursively,
     chain((files) => zip(files.map(readDocumentWithManager(manager)))),
-    map((documents) => documents.filter(isSome).map((d) => d.value)),
+    map((documents) => combineValues(documents.filter(isSome).map((d) => d.value))),
   )
 }
 

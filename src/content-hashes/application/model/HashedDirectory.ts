@@ -1,6 +1,3 @@
-import { AssetManifest, ContentHash, DocumentDiff, FilePath } from '../../domain'
+import { DocumentDiff, Hashes } from '../../domain'
 
-export interface HashedDirectory extends DocumentDiff {
-  readonly assetManifest: AssetManifest
-  readonly hashes: ReadonlyMap<FilePath, ContentHash>
-}
+export interface HashedDirectory extends DocumentDiff, Hashes {}

@@ -8,7 +8,7 @@ import { Directory } from '../../domain'
 import { diffDocuments } from './diffDocuments'
 import { generateAssetManifest } from './generateAssetManifest'
 import { generateContentHashes } from './generateContentHashes'
-import { HashPluginFactory } from './HashPlugin'
+import { HashPluginFactory, HashPluginOptions } from './HashPlugin'
 import { HashPluginManager } from './PluginManager'
 import { readDirectory } from './readDirectory'
 import { rewriteDocumentHashes } from './rewriteDocumentHashes'
@@ -38,18 +38,18 @@ export function provideHashDirectoryEnv<Plugins extends ReadonlyArray<HashPlugin
   return provideWith(
     doEffect(function* () {
       const env = yield* ask<HashPluginEnvs<Plugins>>()
-      const manager = new HashPluginManager(plugins.map((plugin) => plugin({ directory, baseUrl }, env)))
+      const pluginOptions: HashPluginOptions = { directory, hashLength, baseUrl }
+      const manager = new HashPluginManager(plugins.map((plugin) => plugin(pluginOptions, env)))
       const hashDirectoryEnv: HashDirectoryEnv = {
         readDirectory: readDirectory(directory, manager),
         rewriteFileContent: rewriteFileContent(manager),
-        generateContentHashes: generateContentHashes(manager, hashLength),
+        generateContentHashes: generateContentHashes(manager),
         rewriteDocumentHashes: rewriteDocumentHashes(manager),
         generateAssetManifest: generateAssetManifest(directory),
         diffDocuments,
         logLevel,
         logPrefix: logPrefix ? gray(logPrefix) : '',
         logger: (s) => pipe(s, log, provideAll({ console })),
-        hashLength,
       }
 
       return hashDirectoryEnv

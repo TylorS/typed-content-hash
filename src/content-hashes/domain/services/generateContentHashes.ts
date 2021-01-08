@@ -4,8 +4,7 @@ import { identity } from 'fp-ts/function'
 import { ContentHash, Document, FilePath } from '../model'
 
 export interface GenerateContentHashes {
-  readonly generateContentHashes: (document: Document, hashLength: number) => Pure<ReadonlyMap<FilePath, ContentHash>>
-  readonly hashLength: number
+  readonly generateContentHashes: (document: Document) => Pure<ReadonlyMap<FilePath, ContentHash>>
 }
 
 /**
@@ -16,5 +15,5 @@ export const generateContentHashes = (
 ): Effect<GenerateContentHashes, ReadonlyMap<FilePath, ContentHash>> =>
   chain(
     identity,
-    fromEnv((e: GenerateContentHashes) => sync(e.generateContentHashes(contents, e.hashLength))),
+    fromEnv((e: GenerateContentHashes) => sync(e.generateContentHashes(contents))),
   )

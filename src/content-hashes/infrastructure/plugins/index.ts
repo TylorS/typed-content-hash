@@ -5,4 +5,4 @@ import { javascriptPlugin } from './javascript'
 export * from './createPlugin'
 export { cssPlugin, htmlPlugin, javascriptPlugin }
 
-export const defaultPlugins = [cssPlugin, htmlPlugin, javascriptPlugin] as const
+export const defaultPlugins = [cssPlugin, javascriptPlugin, htmlPlugin] as const

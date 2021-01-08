@@ -1,10 +1,12 @@
-import { chain, execEffect } from '@typed/fp'
+import { chain, doEffect, execEffect, fromTask } from '@typed/fp'
 import { Disposable } from '@typed/fp/Disposable/exports'
 import { pipe } from 'fp-ts/function'
-import { resolve } from 'path'
+import { none } from 'fp-ts/lib/Option'
+import { readFile } from 'fs/promises'
+import { extname, resolve } from 'path'
 
 import { hashDirectory, writeHashedDirectory } from './application'
-import { Directory, FilePath } from './domain'
+import { Directory, Document, FileContents, FileExtension, FilePath } from './domain'
 import {
   deleteDocuments,
   HashPluginEnvs,
@@ -44,6 +46,20 @@ export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory
       assetManifest: FilePath.wrap(resolve(directory, assetManifest)),
       writeDocuments,
       deleteDocuments,
+      readFile: (filePath) =>
+        doEffect(function* () {
+          const contents = yield* fromTask(() => readFile(FilePath.unwrap(filePath)).then((b) => b.toString()))
+          const document: Document = {
+            filePath,
+            contents: FileContents.wrap(contents),
+            fileExtension: pipe(filePath, FilePath.unwrap, extname, FileExtension.wrap),
+            dependencies: [],
+            sourceMap: none,
+            dts: none,
+          }
+
+          return document
+        }),
     }),
   )
 }

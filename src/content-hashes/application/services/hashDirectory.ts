@@ -1,4 +1,4 @@
-import { doEffect, Effect, Envs, zip } from '@typed/fp'
+import { doEffect, Effect, Envs } from '@typed/fp'
 
 import { info, LoggerEnv } from '../../common/logging'
 import {
@@ -33,19 +33,18 @@ export type HashDirectoryEnv = Envs<
 
 export const hashDirectory: Effect<HashDirectoryEnv, HashedDirectory> = doEffect(function* () {
   yield* info(`Reading Directory...`)
-  const initialDocuments = toposortDocuments(yield* readDirectory)
+  const [initialDocuments, initialHashes] = yield* readDirectory
   yield* info(`Generating content hashes...`)
-  const { documents, hashes } = yield* reduce(rewriteFile, { documents: [], hashes: new Map() }, initialDocuments)
+  const { documents, hashes } = yield* reduce(
+    rewriteFile,
+    { documents: [], hashes: initialHashes },
+    toposortDocuments(initialDocuments),
+  )
   yield* info(`Rewriting content hashes...`)
   const rewrittenDocuments = yield* rewriteDocumentHashes(documents, hashes)
-  yield* info(`Generating asset manifest...`)
-  const [{ unchanged, deleted, created }, assetManifest] = yield* zip([
-    diffDocuments(initialDocuments, rewrittenDocuments, hashes),
-    generateAssetManifest(initialDocuments, hashes),
-  ] as const)
+  const { unchanged, deleted, created } = yield* diffDocuments(initialDocuments, rewrittenDocuments, hashes)
 
   return {
-    assetManifest,
     created,
     deleted,
     hashes,

@@ -1,6 +1,7 @@
-import { chain, deepEqualsEq, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
+import { chain, deepEqualsEq, doEffect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
 import { eqString, getStructEq, getTupleEq } from 'fp-ts/Eq'
 import { pipe } from 'fp-ts/function'
+import { fst } from 'fp-ts/lib/ReadonlyTuple'
 import { isNone, some } from 'fp-ts/Option'
 import { getEq } from 'fp-ts/ReadonlyArray'
 import { dirname, extname } from 'path'
@@ -75,7 +76,7 @@ const getExtensions = (extension: string) => {
 export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
   options,
   { compilerOptions = getDefaultCompilerOptions() },
-) => {
+): HashPlugin => {
   const base = createPlugin({ ...options, dts: true, sourceMaps: true }, ['.js'])
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
@@ -85,9 +86,16 @@ export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
     useInMemoryFileSystem: true,
   })
 
+  const read = createReadDocument(base, project, pathsResolver)
+
   return {
     ...base,
-    readDocument: createReadDocument(base, project, pathsResolver),
+    readDocument: (path) =>
+      doEffect(function* () {
+        const document = yield* read(path)
+
+        return [document, new Map()] as const
+      }),
   }
 }
 
@@ -151,5 +159,5 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
     )
   }
 
-  return (path: FilePath): Pure<Document> => pipe(path, base.readDocument, chain(getDocumentDependencies))
+  return (path: FilePath): Pure<Document> => pipe(path, base.readDocument, map(fst), chain(getDocumentDependencies))
 }

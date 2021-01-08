@@ -3,8 +3,7 @@ import { doEffect, fromTask, map, Pure, zip } from '@typed/fp'
 import { pipe } from 'fp-ts/function'
 import { map as mapOption, none, some } from 'fp-ts/Option'
 import { fst } from 'fp-ts/ReadonlyTuple'
-import { existsSync } from 'fs'
-import { readFile } from 'fs/promises'
+import { existsSync, promises } from 'fs'
 import { extname } from 'path'
 
 import {
@@ -19,7 +18,8 @@ import {
   SourceMap,
 } from '../../domain'
 
-const readContents = (path: FilePath) => readFile(FilePath.unwrap(path)).then((b) => FileContents.wrap(b.toString()))
+const readContents = (path: FilePath) =>
+  promises.readFile(FilePath.unwrap(path)).then((b) => FileContents.wrap(b.toString()))
 
 const getExtension = (extensions: readonly FileExtension[], filePath: FilePath) =>
   extensions.find((e) => FilePath.unwrap(filePath).endsWith(FileExtension.unwrap(e))) ??

@@ -1,6 +1,6 @@
 import { doEffect, fromTask, map, Pure, zip } from '@typed/fp'
 import { isSome } from 'fp-ts/Option'
-import { unlink } from 'fs/promises'
+import { promises } from 'fs'
 
 import { Document, FilePath, getSourceMapPathFor } from '../domain'
 
@@ -32,5 +32,5 @@ export function deleteDocument(document: Document) {
 }
 
 export function deleteFilePath(filePath: FilePath) {
-  return fromTask(() => unlink(FilePath.unwrap(filePath)))
+  return fromTask(() => promises.unlink(FilePath.unwrap(filePath)))
 }

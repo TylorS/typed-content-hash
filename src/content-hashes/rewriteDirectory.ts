@@ -1,8 +1,7 @@
 import { chain, doEffect, fromTask, provideAll, toPromise } from '@typed/fp'
 import { pipe } from 'fp-ts/function'
 import { none, some } from 'fp-ts/Option'
-import { existsSync } from 'fs'
-import { readFile } from 'fs/promises'
+import { existsSync, promises } from 'fs'
 import { extname, resolve } from 'path'
 
 import { hashDirectory, writeHashedDirectory, WrittenDirectory } from './application'
@@ -54,7 +53,7 @@ export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory
             return none
           }
 
-          const contents = yield* fromTask(() => readFile(FilePath.unwrap(filePath)).then((b) => b.toString()))
+          const contents = yield* fromTask(() => promises.readFile(FilePath.unwrap(filePath)).then((b) => b.toString()))
           const document: Document = {
             filePath,
             contents: FileContents.wrap(contents),

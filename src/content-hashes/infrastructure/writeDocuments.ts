@@ -1,6 +1,6 @@
 import { doEffect, fromTask, map, zip } from '@typed/fp'
 import { isSome } from 'fp-ts/Option'
-import { writeFile } from 'fs/promises'
+import { promises } from 'fs'
 
 import { Document, FileContents, FilePath, getSourceMapPathFor } from '../domain'
 
@@ -32,5 +32,5 @@ export function writeDocument(document: Document) {
 }
 
 export function writeFileContents(filePath: FilePath, contents: FileContents) {
-  return fromTask(() => writeFile(FilePath.unwrap(filePath), FileContents.unwrap(contents)))
+  return fromTask(() => promises.writeFile(FilePath.unwrap(filePath), FileContents.unwrap(contents)))
 }

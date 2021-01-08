@@ -1,5 +1,5 @@
 import { cond, doEffect } from '@typed/fp'
-import { Atrule, AtrulePrelude, CssNode, parse, Url, walk } from 'css-tree'
+import { Atrule, CssNode, parse, Url, walk } from 'css-tree'
 import { readFileSync } from 'fs'
 import { basename, dirname, extname } from 'path'
 import resolve from 'resolve'
@@ -78,7 +78,7 @@ const isUrl = (node: CssNode): node is NonNullableKeys<Url, 'loc'> => node.type 
 
 const findAtRuleSpecifier = (rule: NonNullableKeys<Atrule, 'loc'>): SpecifierPosition | null => {
   if (rule.name === 'import' && rule.prelude && rule.prelude.type === 'AtrulePrelude') {
-    const specifierNode = (rule.prelude as AtrulePrelude).children.first()
+    const specifierNode = rule.prelude.children.first()
 
     if (specifierNode && specifierNode.type === 'String') {
       const { start, end } = specifierNode.loc!
@@ -92,7 +92,6 @@ const findAtRuleSpecifier = (rule: NonNullableKeys<Atrule, 'loc'>): SpecifierPos
 
   if (rule.name === 'import' && rule.prelude && rule.prelude.type === 'Raw') {
     const specifierNode = rule.prelude
-
     const { start, end } = specifierNode.loc!
 
     return {
@@ -161,12 +160,13 @@ function addDependency(
         basedir: dirname(FilePath.unwrap(filePath)),
         packageIterator: (request, _, defaultCanditates) => {
           try {
+            // Attempt to add the current extension to those being looked up
             return [extname(request), ...defaultCanditates()]
           } catch {
             return defaultCanditates()
           }
         },
-        extensions: ['.css', '.png', '.svg', '.jpg', '.jpeg', '.*'],
+        extensions: ['.css', '.png', '.svg', '.jpg', '.jpeg'],
       })
       const ext = extname(depPath)
 

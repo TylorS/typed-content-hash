@@ -8,6 +8,8 @@ import { Directory, FilePath } from '../domain'
  * the file you're trying to make a change within, the origin you'd like to use,
  * and the relative URL you have.
  */
-export function applyOrigin(buildDirectory: Directory, file: FilePath, origin: string): string {
-  return resolve(origin, relative(Directory.unwrap(buildDirectory), FilePath.unwrap(file)))
+export function applyOrigin(buildDirectory: Directory, file: FilePath, origin?: string): string {
+  const relativePath = relative(Directory.unwrap(buildDirectory), FilePath.unwrap(file))
+
+  return origin ? resolve(origin, relativePath) : relativePath
 }

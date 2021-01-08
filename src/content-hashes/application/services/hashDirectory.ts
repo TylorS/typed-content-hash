@@ -45,18 +45,6 @@ export const hashDirectory: Effect<HashDirectoryEnv, HashedDirectory> = doEffect
 
   const { unchanged, deleted, created } = yield* diffDocuments(initialDocuments, rewrittenDocuments, hashes)
 
-  for (const doc of unchanged) {
-    console.log('unchanged', doc.filePath)
-  }
-
-  for (const doc of deleted) {
-    console.log('deleted', doc.filePath)
-  }
-
-  for (const doc of created) {
-    console.log('created', doc.filePath)
-  }
-
   return {
     created,
     deleted,

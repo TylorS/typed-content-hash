@@ -7,19 +7,22 @@ import { readDocument } from './readDocument'
 import { rewriteDocumentHashes } from './rewriteDocumentHashes'
 import { rewriteFileContent } from './rewriteFileContent'
 
-export function createPlugin(
-  { directory, hashLength, baseUrl, sourceMaps = false, dts = false, supportsHashes }: HashPluginOptions,
-  extensions: ReadonlyArray<string>,
-): HashPlugin {
+/**
+ * Create a HashPlugin with most of the functionality you'll tend to need. If it does not provide all the features you require,
+ * it is generally advised to override or extend the base plugin to layer the features atop of them.
+ */
+export function createPlugin(options: HashPluginOptions, extensions: ReadonlyArray<string>): HashPlugin {
+  const { directory, hashLength, baseUrl, sourceMaps = false, dts = false, supportsHashes } = options
   const fileExtensions = extensions.map(FileExtension.wrap)
 
   const plugin: HashPlugin = {
     directory,
     hashLength,
     fileExtensions,
-    generateContentHashes: (document) => Pure.fromIO(() => documentToContentHashes(document, hashLength)),
 
     // TO BE OVERIDDEN AS NEEDED
+
+    generateContentHashes: (document) => Pure.fromIO(() => documentToContentHashes(document, hashLength)),
 
     // Extend readDocument to add support for reading dependencies. Dependencies will be automatically rewritten
     // for you by rewriteFileContent and sourceMaps will reflect those changes.

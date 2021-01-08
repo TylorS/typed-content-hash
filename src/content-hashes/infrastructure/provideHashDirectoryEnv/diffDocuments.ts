@@ -20,10 +20,6 @@ export const diffDocuments = (
   const created = diff(updatedDocs, currentDocs)
   const unchanged = diff(updatedDocs, [...deleted, ...created])
 
-  for (const d of unchanged) {
-    console.log(d.contents)
-  }
-
   return sync({
     created: Array.from(created),
     deleted: Array.from(deleted),

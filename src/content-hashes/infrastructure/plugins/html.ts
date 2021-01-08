@@ -11,51 +11,45 @@ import { generatePathMap } from './generatePathMap'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const rewritePaths = require('posthtml-rewrite-paths').default
 
-const HTTP_EQUIV = 'http-equiv'
-const REFRESH = 'refresh'
-const isHttpEquiv = ({ attrs }: { attrs: Record<string, string> }) =>
-  HTTP_EQUIV in attrs && attrs[HTTP_EQUIV].toLowerCase() === REFRESH
-
 const search = {
-  '*': { itemtype: true },
-  a: { href: true, ping: true },
-  applet: { archive: true, code: true, codebase: true, object: true, src: true },
-  area: { href: true, ping: true },
-  audio: { src: true },
-  base: { href: true },
-  blockquote: { cite: true },
-  body: { background: true },
-  button: { formaction: true },
-  del: { cite: true },
-  embed: { src: true },
-  form: { action: true },
-  frame: { longdesc: true, src: true },
-  head: { profile: true },
-  html: { manifest: true },
-  iframe: { longdesc: true, src: true },
-  img: { longdesc: true, src: true, srcset: true },
-  input: { formaction: true, src: true },
-  ins: { cite: true },
-  link: { href: true },
-  menuitem: { icon: true },
-  meta: { content: isHttpEquiv },
-  object: { codebase: true, data: true },
-  q: { cite: true },
-  script: { src: true },
-  source: { src: true, srcset: true },
-  table: { background: true },
-  tbody: { background: true },
-  td: { background: true },
-  tfoot: { background: true },
-  th: { background: true },
-  thead: { background: true },
-  tr: { background: true },
-  track: { src: true },
-  video: { poster: true, src: true },
+  '*': ['itemtype'],
+  a: ['href', 'ping'],
+  applet: ['archive', 'code', 'codebase', 'object', 'src'],
+  area: ['href', 'ping'],
+  audio: ['src'],
+  base: ['href'],
+  blockquote: ['cite'],
+  body: ['background'],
+  button: ['formaction'],
+  del: ['cite'],
+  embed: ['src'],
+  form: ['action'],
+  frame: ['longdesc', 'src'],
+  head: ['profile'],
+  html: ['manifest'],
+  iframe: ['longdesc', 'src'],
+  img: ['longdesc', 'src', 'srcset'],
+  input: ['formaction', 'src'],
+  ins: ['cite'],
+  link: ['href'],
+  menuitem: ['icon'],
+  meta: ['content'],
+  object: ['codebase', 'data'],
+  q: ['cite'],
+  script: ['src'],
+  source: ['src', 'srcset'],
+  table: ['background'],
+  tbody: ['background'],
+  td: ['background'],
+  tfoot: ['background'],
+  th: ['background'],
+  thead: ['background'],
+  tr: ['background'],
+  track: ['src'],
+  video: ['poster', 'src'],
 }
-
 export const htmlPlugin: HashPluginFactory<{}> = (options): HashPlugin => {
-  const base = createPlugin(options, ['.html'])
+  const base = createPlugin({ ...options, sourceMaps: false, dts: false }, ['.html'])
 
   return {
     ...base,
@@ -68,7 +62,7 @@ function rewriteHtmlHash(options: HashPluginOptions, hashes: ReadonlyMap<FilePat
     return doEffect(function* () {
       const pathMap = generatePathMap(options.directory, options.baseUrl, hashes, document.filePath)
       const rewrite = postHtml([rewritePaths({ search, pathMap })])
-      const { html } = yield* fromTask(() => pipe(document.contents, FileContents.unwrap, rewrite.process))
+      const { html } = yield* fromTask(() => pipe(document.contents, FileContents.unwrap, (a) => rewrite.process(a)))
 
       return {
         ...document,

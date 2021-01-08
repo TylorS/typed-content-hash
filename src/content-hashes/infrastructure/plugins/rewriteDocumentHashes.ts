@@ -17,12 +17,10 @@ export const rewriteDocumentHashes = (
   }
 
   const updated = replaceDocumentHash(document, hash)
-  const base = rewriteDocumentContents(updated, (ms) =>
-    rewriteSourceMapUrl(ms, updated.filePath, updated.fileExtension, hash),
-  )
+  const base = rewriteDocumentContents(updated, (document, ms) => rewriteSourceMapUrl(ms, document.filePath))
   const dts = pipe(
     updated.dts,
-    map((d) => rewriteDocumentContents(d, (ms) => rewriteSourceMapUrl(ms, d.filePath, d.fileExtension, hash))),
+    map((d) => rewriteDocumentContents(d, (document, ms) => rewriteSourceMapUrl(ms, document.filePath))),
   )
 
   return { ...base, dts }

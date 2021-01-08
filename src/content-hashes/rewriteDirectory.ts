@@ -1,11 +1,12 @@
-import { chain, doEffect, execEffect, fromTask } from '@typed/fp'
-import { Disposable } from '@typed/fp/Disposable/exports'
+import { chain, doEffect, fromTask, provideAll, toPromise } from '@typed/fp'
 import { pipe } from 'fp-ts/function'
-import { none } from 'fp-ts/lib/Option'
+import { none, some } from 'fp-ts/Option'
+import { existsSync } from 'fs'
 import { readFile } from 'fs/promises'
 import { extname, resolve } from 'path'
 
-import { hashDirectory, writeHashedDirectory } from './application'
+import { hashDirectory, writeHashedDirectory, WrittenDirectory } from './application'
+import { LogLevel } from './common/logging'
 import { Directory, Document, FileContents, FileExtension, FilePath } from './domain'
 import {
   deleteDocuments,
@@ -22,16 +23,15 @@ export type RewriteDirectoryOptions<Plugins extends ReadonlyArray<HashPluginFact
   readonly hashLength: number
   readonly assetManifest: string
   readonly baseUrl?: string
+  readonly logLevel?: LogLevel
+  readonly logPrefix?: string
 }
 
-export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory<any>>>({
-  directory,
-  plugins,
-  hashLength,
-  assetManifest,
-  baseUrl,
-  pluginEnv,
-}: RewriteDirectoryOptions<Plugins>): Disposable {
+export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory<any>>>(
+  options: RewriteDirectoryOptions<Plugins>,
+): Promise<WrittenDirectory> {
+  const { directory, plugins, hashLength, assetManifest, baseUrl, pluginEnv, logLevel, logPrefix } = options
+
   return pipe(
     hashDirectory,
     chain(writeHashedDirectory),
@@ -40,14 +40,20 @@ export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory
       baseUrl,
       plugins,
       hashLength,
+      logLevel,
+      logPrefix,
     }),
-    execEffect({
+    provideAll({
       ...pluginEnv,
       assetManifest: FilePath.wrap(resolve(directory, assetManifest)),
       writeDocuments,
       deleteDocuments,
       readFile: (filePath) =>
         doEffect(function* () {
+          if (!existsSync(FilePath.unwrap(filePath))) {
+            return none
+          }
+
           const contents = yield* fromTask(() => readFile(FilePath.unwrap(filePath)).then((b) => b.toString()))
           const document: Document = {
             filePath,
@@ -58,8 +64,9 @@ export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory
             dts: none,
           }
 
-          return document
+          return some(document)
         }),
     }),
+    toPromise,
   )
 }

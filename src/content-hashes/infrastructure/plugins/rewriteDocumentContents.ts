@@ -7,7 +7,10 @@ import { basename } from 'path'
 
 import { Document, documentSourceMap, FileContents, FilePath, SourceMap } from '../../domain'
 
-export function rewriteDocumentContents(document: Document, f: (ms: MagicString) => void): Document {
+export function rewriteDocumentContents(
+  document: Document,
+  f: (document: Document, ms: MagicString) => void,
+): Document {
   const file = basename(FilePath.unwrap(document.filePath))
   const contents = FileContents.unwrap(document.contents)
   const ms = new MagicString(contents, {
@@ -15,8 +18,13 @@ export function rewriteDocumentContents(document: Document, f: (ms: MagicString)
     indentExclusionRanges: [],
   })
 
-  f(ms)
+  f(document, ms)
 
+  if (contents === ms.toString()) {
+    return document
+  }
+
+  const updatedContents = FileContents.wrap(ms.toString())
   const updatedSourceMap = JSON.parse(
     ms.generateMap({ hires: true, file, source: ms.original, includeContent: true }).toString(),
   ) as RawSourceMap
@@ -45,7 +53,7 @@ export function rewriteDocumentContents(document: Document, f: (ms: MagicString)
 
   return {
     ...document,
-    contents: FileContents.wrap(ms.toString()),
+    contents: updatedContents,
     sourceMap: some(sourceMap),
   }
 }

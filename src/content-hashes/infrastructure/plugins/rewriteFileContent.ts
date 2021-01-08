@@ -1,5 +1,5 @@
 import { pipe } from 'fp-ts/function'
-import { map } from 'fp-ts/lib/Option'
+import { map } from 'fp-ts/Option'
 import MagicString from 'magic-string'
 import { dirname, relative } from 'path'
 
@@ -12,11 +12,10 @@ const dtsRegex = new RegExp(`.d.ts$`)
 const ensureRelative = (path: string) => (path.startsWith('.') || path.startsWith('/') ? path : './' + path)
 
 const rewriteDependencies = (
-  document: Document,
   hashes: ReadonlyMap<FilePath, ContentHash>,
   directory: Directory,
   baseUrl: string | undefined,
-) => (ms: MagicString) => {
+) => (document: Document, ms: MagicString) => {
   for (const dep of document.dependencies) {
     const depHash = hashes.get(dep.filePath)
 
@@ -39,10 +38,10 @@ export const rewriteFileContent = (
   document: Document,
   hashes: ReadonlyMap<FilePath, ContentHash>,
 ): Document => {
-  const base = rewriteDocumentContents(document, rewriteDependencies(document, hashes, directory, baseUrl))
+  const base = rewriteDocumentContents(document, rewriteDependencies(hashes, directory, baseUrl))
   const dts = pipe(
     document.dts,
-    map((d) => rewriteDocumentContents(d, rewriteDependencies(d, hashes, directory, baseUrl))),
+    map((d) => rewriteDocumentContents(d, rewriteDependencies(hashes, directory, baseUrl))),
   )
 
   return {

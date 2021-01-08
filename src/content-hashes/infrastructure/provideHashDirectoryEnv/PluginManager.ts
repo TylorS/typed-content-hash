@@ -16,7 +16,14 @@ export class HashPluginManager {
     // Attempt to match a plugin in the provided order
     for (const plugin of this.plugins) {
       for (const ext of plugin.fileExtensions) {
-        if (FilePath.unwrap(file).endsWith(FileExtension.unwrap(ext))) {
+        const path = FilePath.unwrap(file)
+        const extension = FileExtension.unwrap(ext)
+
+        if (extension.startsWith('!') && path.endsWith(extension.slice(1))) {
+          break
+        }
+
+        if (path.endsWith(extension)) {
           this.pluginForPath.set(file, plugin)
 
           return some(plugin)

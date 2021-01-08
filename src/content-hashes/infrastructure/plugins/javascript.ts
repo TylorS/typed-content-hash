@@ -76,7 +76,7 @@ export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
   options,
   { compilerOptions = getDefaultCompilerOptions() },
 ): HashPlugin => {
-  const base = createPlugin({ ...options, dts: true, sourceMaps: true }, ['.js'])
+  const base = createPlugin({ ...options, dts: true, sourceMaps: true }, ['!.js.map.proxy.js', '.js'])
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
     compilerOptions: { ...compilerOptions, allowJs: true },
@@ -100,9 +100,10 @@ export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
 
 function createReadDocument(base: HashPlugin, project: Project, pathsResolver: TsConfigPathsResolver) {
   function findDependencies(document: Document): Pure<Document> {
+    const contents = FileContents.unwrap(document.contents)
     const sourceFile =
       project.getSourceFile(FilePath.unwrap(document.filePath)) ||
-      project.createSourceFile(FilePath.unwrap(document.filePath), FileContents.unwrap(document.contents))
+      project.createSourceFile(FilePath.unwrap(document.filePath), contents)
 
     const sourceFilePath = sourceFile.getFilePath()
     const extension = getFileExtension(sourceFilePath)
@@ -127,11 +128,13 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
           }),
           map(
             (filePath): Dependency => {
+              const start = literal.getStart() + 1
+              const end = literal.getEnd() - 1
               const dep: Dependency = {
                 specifier: ModuleSpecifier.wrap(specifier),
                 filePath,
                 fileExtension: FileExtension.wrap(extension),
-                position: [literal.getStart() + 1, literal.getEnd() - 1],
+                position: [start, end],
               }
 
               return dep

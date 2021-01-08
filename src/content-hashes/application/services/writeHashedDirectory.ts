@@ -11,7 +11,9 @@ import {
   FileExtension,
   FilePath,
   generateAssetManifest,
+  getProxyMapFor,
   getSourceMapPathFor,
+  Hashes,
   readFiles,
   replaceDocumentHash,
   writeDocuments,
@@ -30,7 +32,7 @@ const getFilePaths = (doc: Document): readonly FilePath[] => {
       paths.push(sourceMapPath)
 
       if (isSome(doc.sourceMap.value.proxy)) {
-        paths.push(doc.sourceMap.value.proxy.value.filePath)
+        paths.push(getProxyMapFor(sourceMapPath))
       }
     }
   }
@@ -44,22 +46,25 @@ const getFilePaths = (doc: Document): readonly FilePath[] => {
   return paths
 }
 
-export function writeHashedDirectory({ created, deleted, unchanged, hashes }: HashedDirectory) {
-  const eff = doEffect(function* () {
-    const env = yield* ask<{ assetManifest: FilePath }>()
+export interface WrittenDirectory extends Hashes {
+  readonly documents: ReadonlyArray<Document>
+  readonly assetManifest: Document
+}
 
+export function writeHashedDirectory({ created, deleted, hashes }: HashedDirectory) {
+  const eff = doEffect(function* () {
     yield* info(`Hashing additional assets found...`)
-    const existingFilePaths = new Set([
-      ...deleted.flatMap(getFilePaths),
-      ...unchanged.flatMap(getFilePaths),
-      ...created.flatMap(getFilePaths),
-    ])
-    const filesToMove = Array.from(hashes.keys()).filter((path) => !existingFilePaths.has(path))
+
+    const deletedFilePaths = new Set([...deleted.flatMap(getFilePaths)])
+    const filesToMove = Array.from(hashes.keys()).filter((path) => !deletedFilePaths.has(path))
     const documentsToMove = yield* readFiles(filesToMove)
     const hashedDocumentsToMove = documentsToMove.map((d) => replaceDocumentHash(d, hashes.get(d.filePath)!))
 
     yield* info(`Generating asset manifest...`)
-    const assetManifest = yield* generateAssetManifest([...deleted, ...documentsToMove], hashes)
+
+    const env = yield* ask<{ assetManifest: FilePath }>()
+    const documentsToDelete = [...deleted, ...documentsToMove]
+    const assetManifest = yield* generateAssetManifest(documentsToDelete, hashes)
     const assetManifestDocument: Document = {
       filePath: env.assetManifest,
       fileExtension: pipe(env.assetManifest, FilePath.unwrap, extname, FileExtension.wrap),
@@ -70,10 +75,18 @@ export function writeHashedDirectory({ created, deleted, unchanged, hashes }: Ha
     }
 
     yield* info(`Writing changes to disk...`)
-    yield* zip([
-      writeDocuments([...created, ...hashedDocumentsToMove, assetManifestDocument]),
-      deleteDocuments([...deleted, ...documentsToMove]),
-    ])
+
+    const documentsToWrite: ReadonlyArray<Document> = [...created, ...hashedDocumentsToMove, assetManifestDocument]
+
+    yield* zip([writeDocuments(documentsToWrite), deleteDocuments(documentsToDelete)])
+
+    const written: WrittenDirectory = {
+      documents: documentsToWrite,
+      hashes,
+      assetManifest: assetManifestDocument,
+    } as const
+
+    return written
   })
 
   return eff

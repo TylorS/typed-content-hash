@@ -1,8 +1,8 @@
 import MagicString from 'magic-string'
 import { EOL } from 'os'
-import { basename } from 'path'
+import { basename, extname } from 'path'
 
-import { ContentHash, FileExtension, FilePath, replaceHash } from '../../domain'
+import { FilePath } from '../../domain'
 
 const innerRegex = /[#@] sourceMappingURL=([^\s'"]*)/
 const regex = RegExp(
@@ -22,6 +22,14 @@ const regex = RegExp(
     '\\s*',
 )
 
+function cssTemplate(path: string) {
+  return `/*# sourceMappingURL=${path} *`
+}
+
+function jsTemplate(path: string) {
+  return `//# sourceMappingURL=${path}`
+}
+
 function getSourceMapUrl(code: string) {
   const match = code.match(regex)
 
@@ -40,12 +48,13 @@ function getSourceMapTextRange(code: string) {
   return [start, start + match[0].length] as const
 }
 
-export function rewriteSourceMapUrl(ms: MagicString, filePath: FilePath, extension: FileExtension, hash: ContentHash) {
+export function rewriteSourceMapUrl(ms: MagicString, filePath: FilePath) {
   const contents = ms.original
   const sourceMapUrl = getSourceMapUrl(contents)
   const textRange = getSourceMapTextRange(contents)
-  const hashedUrl = basename(FilePath.unwrap(replaceHash(filePath, extension, hash)))
-  const hashedSourceMapUrl = `//# sourceMappingURL=${hashedUrl}` + EOL
+  const hashedUrl = basename(FilePath.unwrap(filePath))
+  const ext = extname(hashedUrl)
+  const hashedSourceMapUrl = (ext === '.css' ? cssTemplate(hashedUrl) : jsTemplate(hashedUrl)) + EOL
 
   if (!sourceMapUrl || !textRange) {
     ms.append(hashedSourceMapUrl)

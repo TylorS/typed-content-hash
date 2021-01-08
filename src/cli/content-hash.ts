@@ -57,4 +57,8 @@ rewriteDirectory({
   },
   assetManifest: resolve(directory, options.assetManifest),
   baseUrl: options.baseUrl,
+}).catch((error) => {
+  console.error(error)
+
+  process.exit(1)
 })

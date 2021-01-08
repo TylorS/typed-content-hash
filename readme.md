@@ -41,5 +41,4 @@ We've enabled [Github Discussions](https://github.com/TylorS/typed-content-hash/
 
 ## TODO
 
-- [ ] Support CSS w/ arbitrary file types
 - [ ] Support Rewriting HTML links/scripts/etc

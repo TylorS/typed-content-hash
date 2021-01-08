@@ -10,11 +10,13 @@ Rewrite a directory of static files with SHA-512 content hashes with first-class
 - [TypeScript API](#API), with a simple plugin API.
 - Generates Asset Manifest as JSON 
 - Simple CLI
-- [Generates](https://github.com/Rich-Harris/magic-string) and remaps SourceMaps
+- [Generates](https://github.com/Rich-Harris/magic-string) and [remaps](https://github.com/ampproject/remapping) SourceMaps
 
 ## CLI
 
 ```sh
+$ typed-content-hash --dir build
+
 Options:
       --version           Show version number                          [boolean]
       --directory, --dir  The directory to apply content hashes
@@ -31,14 +33,64 @@ Options:
 
 ## API 
 
-This is currently in flux until a proper v1. Follow the re-exports from `src/index.ts` for now or [open a discussion](#Discussions).
+For the moment `rewriteDirectory` is the main API function you'd be interested in using. The CLI is a small 
+wrapper around running just this function.
 
-If you're looking for plugins you'll currently want to poke in `src/content-hashes/infrastructure/provideHashDirectoryEnv/HashPlugin.ts`
+> TODO: Write better documents :smile:
+
+### rewriteDirectory :: RewriteDirectoryOptions -> Promise WrittenDirectory
+
+```typescript
+export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory<any>>>(
+  options: RewriteDirectoryOptions<Plugins>,
+): Promise<WrittenDirectory> 
+
+export type RewriteDirectoryOptions<Plugins extends ReadonlyArray<HashPluginFactory<any>>> = {
+  readonly pluginEnv: HashPluginEnvs<Plugins>
+  readonly directory: string
+  readonly plugins: Plugins
+  readonly hashLength: number
+  readonly assetManifest: string
+  readonly baseUrl?: string
+  readonly logLevel?: LogLevel
+  readonly logPrefix?: string
+}
+
+export type HashPluginFactory<E> = (options: HashPluginOptions, env: E) => HashPlugin
+
+export interface HashPlugin extends RewriteFileContent, GenerateContentHashes, RewriteDocumentHashes {
+  // Directory HashPlugin is configured to work within
+  readonly directory: Directory
+  // Configured HashLength max
+  readonly hashLength: number
+  // Supported File Extensions
+  readonly fileExtensions: ReadonlyArray<FileExtension>
+  // How to read documents of supported extensions
+  readonly readDocument: (path: FilePath) => Pure<readonly [Document, Hashes['hashes']]>
+}
+
+export interface RewriteFileContent {
+  readonly rewriteFileContent: (document: Document, hashes: ReadonlyMap<FilePath, ContentHash>) => Pure<Document>
+}
+
+export interface GenerateContentHashes {
+  readonly generateContentHashes: (document: Document) => Pure<ReadonlyMap<FilePath, ContentHash>>
+}
+
+
+export interface RewriteDocumentHashes {
+  readonly rewriteDocumentHashes: (
+    documents: readonly Document[],
+    hashes: ReadonlyMap<FilePath, ContentHash>,
+  ) => Pure<readonly Document[]>
+}
+```
 
 ## Discussions
 
 We've enabled [Github Discussions](https://github.com/TylorS/typed-content-hash/discussions) if you would ever like to reach out about anything related to the project!
 
-## TODO
 
-- [ ] Support Rewriting HTML links/scripts/etc
+## Related Projects
+
+- [snowpack-plugin-hash](https://github.com/TylorS/snowpack-plugin-hash) - Uses library

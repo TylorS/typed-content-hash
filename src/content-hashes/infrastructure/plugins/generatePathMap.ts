@@ -20,7 +20,7 @@ function applyRemounts(buildDirectory: Directory, baseUrl: string | undefined, p
     const hashed = replaceHash(from, getFileExtension(from), hash)
     const absolutePath = relative(Directory.unwrap(buildDirectory), FilePath.unwrap(hashed))
     const absoluteTo = baseUrl ? applyOrigin(buildDirectory, hashed, baseUrl) : ensureAbsolute(absolutePath)
-    const relativePath = relative(pipe(path, FilePath.unwrap, dirname), absolutePath)
+    const relativePath = relative(pipe(path, FilePath.unwrap, dirname), FilePath.unwrap(hashed))
     const relativeTo = baseUrl ? applyOrigin(buildDirectory, hashed, baseUrl) : ensureRelative(relativePath)
 
     const baseUrls = [

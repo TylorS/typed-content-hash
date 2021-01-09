@@ -1,4 +1,6 @@
 import { ask, doEffect, Effect, LoggerEffect } from '@typed/fp'
+import * as colors from 'typed-colors'
+import * as figures from 'typed-figures'
 
 export enum LogLevel {
   Debug,
@@ -17,12 +19,39 @@ export interface LogEntry {
   readonly message: string
 }
 
+export const levelToIcon = (level: LogLevel) => {
+  switch (level) {
+    case LogLevel.Debug:
+      return figures.bullet
+    case LogLevel.Error:
+      return figures.warning
+    case LogLevel.Info:
+      return figures.info
+  }
+}
+
+export const levelToColor = (level: LogLevel, message: string): string => {
+  switch (level) {
+    case LogLevel.Debug:
+      return colors.dim(message)
+    case LogLevel.Error:
+      return colors.red(message)
+    case LogLevel.Info:
+      return colors.white(message)
+  }
+}
+
 export function logEntry(entry: LogEntry): Effect<LoggerEnv, void> {
   const eff = doEffect(function* () {
     const { logLevel, logger, logPrefix } = yield* ask<LoggerEnv>()
 
     if (logLevel <= entry.level) {
-      yield* logger(`${logPrefix} ${entry.message}`.trim())
+      yield* logger(
+        `${logPrefix} ${levelToColor(entry.level, levelToIcon(entry.level))} ${levelToColor(
+          entry.level,
+          entry.message,
+        )}`.trim(),
+      )
     }
   })
 

@@ -22,7 +22,7 @@ export interface LogEntry {
 export const levelToIcon = (level: LogLevel) => {
   switch (level) {
     case LogLevel.Debug:
-      return figures.bullet
+      return figures.squareSmallFilled
     case LogLevel.Error:
       return figures.warning
     case LogLevel.Info:
@@ -30,7 +30,18 @@ export const levelToIcon = (level: LogLevel) => {
   }
 }
 
-export const levelToColor = (level: LogLevel, message: string): string => {
+export const levelToIconColor = (level: LogLevel, message: string): string => {
+  switch (level) {
+    case LogLevel.Debug:
+      return colors.white(message)
+    case LogLevel.Error:
+      return colors.red(message)
+    case LogLevel.Info:
+      return colors.blue(message)
+  }
+}
+
+export const levelToTextColor = (level: LogLevel, message: string): string => {
   switch (level) {
     case LogLevel.Debug:
       return colors.dim(message)
@@ -47,7 +58,7 @@ export function logEntry(entry: LogEntry): Effect<LoggerEnv, void> {
 
     if (logLevel <= entry.level) {
       yield* logger(
-        `${logPrefix} ${levelToColor(entry.level, levelToIcon(entry.level))} ${levelToColor(
+        `${logPrefix} ${levelToIconColor(entry.level, levelToIcon(entry.level))} ${levelToTextColor(
           entry.level,
           entry.message,
         )}`.trim(),

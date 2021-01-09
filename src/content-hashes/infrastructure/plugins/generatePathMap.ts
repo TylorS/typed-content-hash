@@ -1,8 +1,10 @@
 import { pipe } from 'fp-ts/lib/function'
-import { dirname, extname, relative, resolve } from 'path'
+import { dirname, extname, relative } from 'path'
 
 import { applyOrigin } from '../../common/applyOrigin'
 import { ContentHash, Directory, FileExtension, FilePath, replaceHash } from '../../domain'
+
+const multiSeparatedExtensions = ['.js.map.proxy.js', '.d.ts.map', '.js.map', '.d.ts']
 
 export function generatePathMap(
   buildDirectory: Directory,
@@ -15,17 +17,15 @@ export function generatePathMap(
 
 function applyRemounts(buildDirectory: Directory, baseUrl: string | undefined, path: FilePath) {
   return ([from, hash]: [FilePath, ContentHash]): ReadonlyArray<readonly [string, string]> => {
-    const ext = pipe(from, FilePath.unwrap, extname, FileExtension.wrap)
-    const withOrigin = applyOrigin(buildDirectory, replaceHash(from, ext, hash), baseUrl)
-    const to = baseUrl ? withOrigin : ensureRelative(withOrigin)
-    const absolutePath = relative(Directory.unwrap(buildDirectory), FilePath.unwrap(from))
-    const relativePath = relative(
-      pipe(path, FilePath.unwrap, dirname),
-      resolve(Directory.unwrap(buildDirectory), FilePath.unwrap(from)),
-    )
+    const hashed = replaceHash(from, getFileExtension(from), hash)
+    const absolutePath = relative(Directory.unwrap(buildDirectory), FilePath.unwrap(hashed))
+    const absoluteTo = baseUrl ? applyOrigin(buildDirectory, hashed, baseUrl) : ensureAbsolute(absolutePath)
+    const relativePath = relative(pipe(path, FilePath.unwrap, dirname), absolutePath)
+    const relativeTo = baseUrl ? applyOrigin(buildDirectory, hashed, baseUrl) : ensureRelative(relativePath)
+
     const baseUrls = [
-      [ensureAbsolute(absolutePath), to],
-      [ensureRelative(relativePath), to],
+      [ensureAbsolute(absolutePath), absoluteTo],
+      [ensureRelative(relativePath), relativeTo],
     ] as const
 
     // Relative paths to another directory can not omit relative path
@@ -33,7 +33,7 @@ function applyRemounts(buildDirectory: Directory, baseUrl: string | undefined, p
       return baseUrls
     }
 
-    return [...baseUrls, [stripRelative(relativePath), to]]
+    return [...baseUrls, [stripRelative(relativePath), stripRelative(relativeTo)]]
   }
 }
 
@@ -63,4 +63,16 @@ function stripRelative(path: string): string {
   }
 
   return path
+}
+
+const getFileExtension = (filePath: FilePath): FileExtension => {
+  const path = FilePath.unwrap(filePath)
+
+  for (const extension of multiSeparatedExtensions) {
+    if (path.endsWith(extension)) {
+      return FileExtension.wrap(extension)
+    }
+  }
+
+  return FileExtension.wrap(extname(path))
 }

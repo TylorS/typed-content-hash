@@ -1,6 +1,8 @@
-import { Pure } from '@typed/fp'
+import { doEffect, zip } from '@typed/fp'
+import { relative } from 'path'
 
-import { FileExtension } from '../../domain'
+import { debug } from '../../common/logging'
+import { Directory, FileExtension, FilePath } from '../../domain'
 import { HashPlugin, HashPluginOptions } from '../provideHashDirectoryEnv'
 import { documentToContentHashes } from './documentToContentHashes'
 import { readDocument } from './readDocument'
@@ -22,23 +24,30 @@ export function createPlugin(options: HashPluginOptions, extensions: ReadonlyArr
 
     // TO BE OVERIDDEN AS NEEDED
 
-    generateContentHashes: (document) => Pure.fromIO(() => documentToContentHashes(document, hashLength)),
+    generateContentHashes: (document) => documentToContentHashes(document, hashLength),
 
     // Extend readDocument to add support for reading dependencies. Dependencies will be automatically rewritten
     // for you by rewriteFileContent and sourceMaps will reflect those changes.
-    readDocument: readDocument(fileExtensions, sourceMaps, dts, supportsHashes),
+    readDocument: readDocument(directory, fileExtensions, sourceMaps, dts, supportsHashes),
 
     // Extend to provide any additional rewrites BEFORE hashing the current Document.
     // Will already handle rewriting all of your dependencies that should have Hashes.
     rewriteFileContent: (
       document,
       hashes, //
-    ) => Pure.fromIO(() => rewriteFileContent(directory, baseUrl, document, hashes)),
+    ) =>
+      doEffect(function* () {
+        yield* debug(
+          `Rewriting file content: ${relative(Directory.unwrap(directory), FilePath.unwrap(document.filePath))}...`,
+        )
+
+        return rewriteFileContent(directory, baseUrl, document, hashes)
+      }),
 
     // Extend to provide any additional rewrites AFTER hashing been entirely completed.
     // Will already rewrite your source map URLS when source map support is enabled.
     rewriteDocumentHashes: (documents, hashes) =>
-      Pure.fromIO(() => documents.map((doc) => rewriteDocumentHashes(doc, hashes, sourceMaps))), // HTML
+      zip(documents.map((doc) => rewriteDocumentHashes(directory, doc, hashes, sourceMaps))),
   }
 
   return plugin

@@ -1,8 +1,12 @@
-import { doEffect, execEffect } from '@typed/fp'
+import { doEffect, execEffect, Pure } from '@typed/fp'
 import { deepStrictEqual } from 'assert'
+import { log } from 'fp-ts/lib/Console'
+import { pipe } from 'fp-ts/lib/function'
 import { describe, it } from 'mocha'
 import { join } from 'path'
+import { gray } from 'typed-colors'
 
+import { LogLevel } from '../../common/logging'
 import { ContentHash, Dependency, Directory, FileExtension, FilePath, Hashes, ModuleSpecifier } from '../../domain'
 import { cssPlugin } from './css'
 
@@ -62,7 +66,7 @@ export const test = describe(`cssPlugin`, () => {
         }
       })
 
-      execEffect({}, test)
+      execEffect({ logLevel: LogLevel.Debug, logPrefix: gray('test'), logger: (m) => pipe(m, log, Pure.fromIO) }, test)
     })
   })
 })

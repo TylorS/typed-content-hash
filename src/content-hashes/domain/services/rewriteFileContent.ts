@@ -1,10 +1,14 @@
-import { chain, fromEnv, Pure, sync } from '@typed/fp'
+import { chain, Effect, fromEnv, sync } from '@typed/fp'
 import { identity } from 'fp-ts/lib/function'
 
+import { LoggerEnv } from '../../common/logging'
 import { ContentHash, Document, FilePath } from '../model'
 
 export interface RewriteFileContent {
-  readonly rewriteFileContent: (document: Document, hashes: ReadonlyMap<FilePath, ContentHash>) => Pure<Document>
+  readonly rewriteFileContent: (
+    document: Document,
+    hashes: ReadonlyMap<FilePath, ContentHash>,
+  ) => Effect<LoggerEnv, Document>
 }
 
 /**

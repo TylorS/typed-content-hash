@@ -1,5 +1,6 @@
-import { Pure } from '@typed/fp'
+import { Effect } from '@typed/fp'
 
+import { LoggerEnv, LogLevel } from '../../common/logging'
 import {
   Directory,
   Document,
@@ -14,6 +15,7 @@ import {
 export type HashPluginOptions = {
   readonly directory: Directory
   readonly hashLength: number
+  readonly logLevel?: LogLevel
   readonly baseUrl?: string | undefined
   readonly sourceMaps?: boolean
   readonly dts?: boolean
@@ -30,5 +32,5 @@ export interface HashPlugin extends RewriteFileContent, GenerateContentHashes, R
   // Supported File Extensions
   readonly fileExtensions: ReadonlyArray<FileExtension>
   // How to read documents of supported extensions
-  readonly readDocument: (path: FilePath) => Pure<readonly [Document, Hashes['hashes']]>
+  readonly readDocument: (path: FilePath) => Effect<LoggerEnv, readonly [Document, Hashes['hashes']]>
 }

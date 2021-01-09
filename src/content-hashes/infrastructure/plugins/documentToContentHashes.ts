@@ -1,8 +1,10 @@
+import { doEffect, Effect, Pure } from '@typed/fp'
 import base64url from 'base64url'
 import { createHash } from 'crypto'
 import { pipe } from 'fp-ts/lib/function'
 import { isSome } from 'fp-ts/lib/Option'
 
+import { debug, LoggerEnv } from '../../common/logging'
 import { ContentHash, Document, FileContents, FilePath, getSourceMapPathFor } from '../../domain'
 import { trimHash } from './trimHash'
 
@@ -17,28 +19,37 @@ export const documentToContentHashes = (
   document: Document,
   hashLength: number,
   hash: ContentHash = createShaHash(document.contents),
-): ReadonlyMap<FilePath, ContentHash> => {
+): Effect<LoggerEnv, ReadonlyMap<FilePath, ContentHash>> => {
   if (!document.supportsHashes) {
-    return new Map()
+    return Pure.of(new Map())
   }
 
   const trimmedHash = pipe(hash, trimHash(hashLength))
 
-  let map = new Map([[document.filePath, trimmedHash]])
+  const eff = doEffect(function* () {
+    yield* debug(`Generating content hashes for ${document.filePath}...`)
 
-  if (isSome(document.sourceMap)) {
-    const sourceMapPath = getSourceMapPathFor(document.filePath)
+    let map = new Map([[document.filePath, trimmedHash]])
 
-    map.set(sourceMapPath, trimmedHash)
+    if (isSome(document.sourceMap)) {
+      const sourceMapPath = getSourceMapPathFor(document.filePath)
 
-    if (isSome(document.sourceMap.value.proxy)) {
-      map = new Map([...map, ...documentToContentHashes(document.sourceMap.value.proxy.value, hashLength, trimmedHash)])
+      map.set(sourceMapPath, trimmedHash)
+
+      if (isSome(document.sourceMap.value.proxy)) {
+        map = new Map([
+          ...map,
+          ...(yield* documentToContentHashes(document.sourceMap.value.proxy.value, hashLength, trimmedHash)),
+        ])
+      }
     }
-  }
 
-  if (isSome(document.dts)) {
-    map = new Map([...map, ...documentToContentHashes(document.dts.value, hashLength, trimmedHash)])
-  }
+    if (isSome(document.dts)) {
+      map = new Map([...map, ...(yield* documentToContentHashes(document.dts.value, hashLength, trimmedHash))])
+    }
 
-  return map
+    return map
+  })
+
+  return eff
 }

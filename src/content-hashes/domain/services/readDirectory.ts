@@ -1,10 +1,14 @@
-import { chain, fromEnv, Pure, sync } from '@typed/fp'
+import { chain, Effect, fromEnv, sync } from '@typed/fp'
 import { identity, pipe } from 'fp-ts/lib/function'
 
+import { LoggerEnv } from '../../common/logging'
 import { Document, Hashes } from '../model'
 
 export interface ReadDirectory {
-  readonly readDirectory: Pure<readonly [documents: ReadonlyArray<Document>, additionalHashes: Hashes['hashes']]>
+  readonly readDirectory: Effect<
+    LoggerEnv,
+    readonly [documents: ReadonlyArray<Document>, additionalHashes: Hashes['hashes']]
+  >
 }
 
 /**

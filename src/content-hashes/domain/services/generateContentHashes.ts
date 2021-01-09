@@ -1,10 +1,11 @@
-import { chain, Effect, fromEnv, Pure, sync } from '@typed/fp'
+import { chain, Effect, fromEnv, sync } from '@typed/fp'
 import { identity } from 'fp-ts/lib/function'
 
+import { LoggerEnv } from '../../common/logging'
 import { ContentHash, Document, FilePath } from '../model'
 
 export interface GenerateContentHashes {
-  readonly generateContentHashes: (document: Document) => Pure<ReadonlyMap<FilePath, ContentHash>>
+  readonly generateContentHashes: (document: Document) => Effect<LoggerEnv, ReadonlyMap<FilePath, ContentHash>>
 }
 
 /**
@@ -12,7 +13,7 @@ export interface GenerateContentHashes {
  */
 export const generateContentHashes = (
   contents: Document,
-): Effect<GenerateContentHashes, ReadonlyMap<FilePath, ContentHash>> =>
+): Effect<GenerateContentHashes & LoggerEnv, ReadonlyMap<FilePath, ContentHash>> =>
   chain(
     identity,
     fromEnv((e: GenerateContentHashes) => sync(e.generateContentHashes(contents))),

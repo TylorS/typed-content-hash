@@ -1,4 +1,4 @@
-import { chain, deepEqualsEq, doEffect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
+import { chain, deepEqualsEq, doEffect, Effect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
 import { eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
 import { isNone, some } from 'fp-ts/lib/Option'
@@ -8,6 +8,7 @@ import { dirname, extname } from 'path'
 import { CompilerOptions, Project } from 'ts-morph'
 import { getDefaultCompilerOptions } from 'typescript'
 
+import { LoggerEnv } from '../../common/logging'
 import { Dependency, Document, FileContents, FileExtension, FilePath } from '../../domain'
 import { ModuleSpecifier } from '../../domain/model/ModuleSpecifier'
 import { HashPlugin, HashPluginFactory } from '../provideHashDirectoryEnv'
@@ -147,7 +148,7 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
     )
   }
 
-  function getDocumentDependencies(document: Document): Pure<Document> {
+  function getDocumentDependencies(document: Document): Effect<LoggerEnv, Document> {
     if (isNone(document.dts)) {
       return findDependencies(document)
     }
@@ -161,5 +162,6 @@ function createReadDocument(base: HashPlugin, project: Project, pathsResolver: T
     )
   }
 
-  return (path: FilePath): Pure<Document> => pipe(path, base.readDocument, map(fst), chain(getDocumentDependencies))
+  return (path: FilePath): Effect<LoggerEnv, Document> =>
+    pipe(path, base.readDocument, map(fst), chain(getDocumentDependencies))
 }

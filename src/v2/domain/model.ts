@@ -13,6 +13,7 @@ export interface Document {
 export interface Dependency {
   readonly specifier: string
   readonly filePath: string
+  readonly fileExtension: string
   readonly position: Position
 }
 

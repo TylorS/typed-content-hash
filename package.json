@@ -53,6 +53,7 @@
     "resolve": "^1.19.0",
     "toposort": "^2.0.2",
     "ts-morph": "^9.1.0",
+    "tsconfig-paths": "^3.9.0",
     "tslib": "^2.1.0",
     "typed-colors": "^1.0.0",
     "typed-figures": "^1.0.0",

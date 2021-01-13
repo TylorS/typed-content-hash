@@ -1,7 +1,7 @@
 import { doEffect, EnvOf, log, provideAll, provideSome, toPromise } from '@typed/fp'
 import { pipe } from 'fp-ts/lib/function'
 import { none } from 'fp-ts/lib/Option'
-import { join } from 'path'
+import { resolve } from 'path'
 import { gray } from 'typed-colors'
 
 import { hashDirectory } from './application/hashDirectory'
@@ -51,7 +51,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     const registry = yield* hashDirectory(directory)
     const assetManifiest = yield* generateAssetManifest(registry)
     const assetManifiestDoc: Document = {
-      filePath: join(directory, options.assetManifest),
+      filePath: resolve(directory, options.assetManifest),
       fileExtension: '.json',
       contents: JSON.stringify(assetManifiest, null, 2),
       contentHash: none,

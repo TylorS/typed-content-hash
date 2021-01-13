@@ -37,14 +37,12 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
             }
           }
 
-          if (!document.isBase64Encoded) {
-            if (existsSync(document.filePath) && pathChanged) {
-              yield* unlinkFile(document.filePath)
-            }
+          if (!document.isBase64Encoded && existsSync(document.filePath) && pathChanged) {
+            yield* unlinkFile(document.filePath)
+          }
 
-            if (!document.isBase64Encoded) {
-              yield* writeFile(hashedPath, document.contents)
-            }
+          if (!document.isBase64Encoded) {
+            yield* writeFile(hashedPath, document.contents)
           }
 
           if (document.isBase64Encoded) {

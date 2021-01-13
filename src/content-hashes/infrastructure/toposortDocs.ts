@@ -11,7 +11,7 @@ export const topoSortDocs = (documents: readonly Document[]): Effect<LoggerEnv, 
   doEffect(function* () {
     yield* debug(`Topologically sorting documents...`)
 
-    const edges = pipe(documents).flatMap((doc) =>
+    const edges = documents.flatMap((doc) =>
       doc.dependencies.map((dep): [string, string] => [doc.filePath, dep.filePath]),
     )
 

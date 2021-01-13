@@ -5,11 +5,7 @@ import { resolve } from 'path'
 import { getDefaultCompilerOptions } from 'typescript'
 import yargs from 'yargs'
 
-import { LogLevel } from '../content-hashes/application/services/logging'
-import { contentHashDirectory } from '../content-hashes/contentHashDirectory'
-import { createCssPlugin } from '../content-hashes/infrastructure/plugins/css'
-import { createHtmlPlugin } from '../content-hashes/infrastructure/plugins/html'
-import { createJavascriptPlugin } from '../content-hashes/infrastructure/plugins/javascript'
+import { contentHashDirectory, createDefaultPlugins, LogLevel } from '../content-hashes/'
 import { findTsConfig } from './findTsConfig'
 
 const options = yargs
@@ -69,17 +65,13 @@ contentHashDirectory({
   hashLength: options.hashLength ?? Infinity,
   assetManifest: resolve(directory, options.assetManifest),
   baseUrl: options.baseUrl,
-  plugins: [
-    createJavascriptPlugin({
-      compilerOptions: pipe(
-        tsConfig,
-        map((t) => t.compilerOptions),
-        getOrElse(getDefaultCompilerOptions),
-      ),
-    }),
-    createCssPlugin(),
-    createHtmlPlugin(),
-  ],
+  plugins: createDefaultPlugins({
+    compilerOptions: pipe(
+      tsConfig,
+      map((t) => t.compilerOptions),
+      getOrElse(getDefaultCompilerOptions),
+    ),
+  }),
   logLevel: getLogLevel(options.logLevel),
 }).catch((error) => {
   console.error(error)

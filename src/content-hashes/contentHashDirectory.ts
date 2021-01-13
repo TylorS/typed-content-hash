@@ -29,10 +29,10 @@ import {
 
 export type ContentHashOptions = {
   readonly directory: string
-  readonly assetManifest: string
-  readonly hashLength: number
   readonly plugins: ReadonlyArray<HashPlugin>
 
+  readonly assetManifest?: string
+  readonly hashLength?: number
   readonly baseUrl?: string
   readonly documentRegistry?: DocumentRegistry
   readonly logLevel?: LogLevel
@@ -41,15 +41,18 @@ export type ContentHashOptions = {
 
 const DEFAULT_LOG_LEVEL = LogLevel.Error
 const DEFAULT_LOG_PREFIX = gray(`[typed-content-hash]`)
+const DEFAULT_HASH_LENGTH = Infinity
+const DEFAULT_ASSET_MANIFEST = 'asset-manifest.json'
 
 export function contentHashDirectory(options: ContentHashOptions): Promise<DocumentRegistry> {
   const {
     directory,
+    plugins,
     logLevel = DEFAULT_LOG_LEVEL,
     logPrefix = DEFAULT_LOG_PREFIX,
     documentRegistry = new Map(),
-    hashLength,
-    plugins,
+    hashLength = DEFAULT_HASH_LENGTH,
+    assetManifest = DEFAULT_ASSET_MANIFEST,
     baseUrl,
   } = options
 
@@ -59,11 +62,11 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
 
   const program = doEffect(function* () {
     const registry = yield* hashDirectory(directory)
-    const assetManifiest = yield* generateAssetManifest(registry)
+    const assetManifiestJson = yield* generateAssetManifest(registry)
     const assetManifiestDoc: Document = {
-      filePath: resolve(directory, options.assetManifest),
+      filePath: resolve(directory, assetManifest),
       fileExtension: '.json',
-      contents: JSON.stringify(assetManifiest, null, 2),
+      contents: JSON.stringify(assetManifiestJson, null, 2),
       contentHash: none,
       sourceMap: none,
       isBase64Encoded: false,

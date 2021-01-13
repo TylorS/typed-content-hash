@@ -42,8 +42,6 @@ export const hashDirectory = (directory: string) =>
       useSome({ documentRegistry: supportedDocumentRegistry }),
     )
 
-    console.log(dependencies)
-
     // Sort them all so we can rewrite hashes effectively
     const documents: readonly Document[] = yield* toposortDocuments([...supportedDocuments, ...dependencies])
 

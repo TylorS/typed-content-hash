@@ -1,7 +1,7 @@
 import { doEffect, Effect } from '@typed/fp'
 import { pipe } from 'fp-ts/lib/function'
-import { contramap, ordNumber } from 'fp-ts/lib/Ord'
-import { sort } from 'fp-ts/lib/ReadonlyArray'
+import { contramap, ordNumber, ordString } from 'fp-ts/lib/Ord'
+import { sort, uniq } from 'fp-ts/lib/ReadonlyArray'
 import toposort from 'toposort'
 
 import { debug, LoggerEnv } from '../application/services/logging'
@@ -11,7 +11,7 @@ export const topoSortDocs = (documents: readonly Document[]): Effect<LoggerEnv, 
   doEffect(function* () {
     yield* debug(`Topologically sorting documents...`)
 
-    const edges = documents.flatMap((doc) =>
+    const edges = pipe(documents).flatMap((doc) =>
       doc.dependencies.map((dep): [string, string] => [doc.filePath, dep.filePath]),
     )
 
@@ -23,6 +23,12 @@ export const topoSortDocs = (documents: readonly Document[]): Effect<LoggerEnv, 
         ordNumber,
         contramap((d: Document) => filePaths.indexOf(d.filePath)),
         sort,
+      ),
+      uniq(
+        pipe(
+          ordString,
+          contramap((d) => d.filePath),
+        ),
       ),
     )
   })

@@ -26,7 +26,7 @@ const rewriteContentHash = (document: Document) =>
 const remapSourceMaps = (current: Document, updated: Document): Document => ({
   ...updated,
   contentHash: current.contentHash,
-  contents: remapping([updated.contents, current.contents], () => null).toString(),
+  contents: JSON.stringify(JSON.parse(remapping([updated.contents, current.contents], () => null).toString()), null, 2),
 })
 
 export function rewriteDocumentContents(document: Document, f: (magicString: MagicString) => void) {

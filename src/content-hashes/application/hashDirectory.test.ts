@@ -190,7 +190,7 @@ describe('hashDirectory', () => {
       }
     })
 
-    const readFilePath = createReadFilePath(createDefaultPlugins())
+    const readFilePath = createReadFilePath(createDefaultPlugins({ buildDirectory: testDirectory }))
     const documentRegistryEnv: DocumentRegistryEnv = { documentRegistry: new Map() }
     const loggerEnv: LoggerEnv = {
       logLevel: LogLevel.Debug,

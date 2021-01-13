@@ -66,6 +66,7 @@ contentHashDirectory({
   assetManifest: resolve(directory, options.assetManifest),
   baseUrl: options.baseUrl,
   plugins: createDefaultPlugins({
+    buildDirectory: directory,
     compilerOptions: pipe(
       tsConfig,
       map((t) => t.compilerOptions),

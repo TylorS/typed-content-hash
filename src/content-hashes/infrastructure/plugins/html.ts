@@ -2,11 +2,12 @@ import { doEffect } from '@typed/fp'
 import { none, some } from 'fp-ts/lib/Option'
 import { getMonoid } from 'fp-ts/lib/ReadonlyArray'
 import { foldMap, Tree } from 'fp-ts/lib/Tree'
-import { dirname, extname } from 'path'
+import { dirname, extname, relative, resolve } from 'path'
 import { red, yellow } from 'typed-colors'
 
 import { debug } from '../../application/services/logging'
 import { Dependency, Document } from '../../domain/model'
+import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { HashPlugin } from '../HashPlugin'
 import { resolvePackage } from './resolvePackage'
@@ -83,7 +84,11 @@ const searchMap: Readonly<Record<string, readonly string[]>> = {
   video: ['poster', 'src'],
 } as const
 
-export function createHtmlPlugin(): HashPlugin {
+export interface HtmlPuginOptions {
+  readonly buildDirectory: string
+}
+
+export function createHtmlPlugin({ buildDirectory }: HtmlPuginOptions): HashPlugin {
   const html: HashPlugin = {
     readFilePath: (filePath) =>
       doEffect(function* () {
@@ -99,7 +104,7 @@ export function createHtmlPlugin(): HashPlugin {
         const initial = yield* fsReadFile(filePath, { supportsSourceMaps: false, isBase64Encoded: false })
         yield* debug(`${yellow(`[HTML]`)} Finding Dependencies ${filePath}...`)
 
-        const document: Document = findDependencies(initial)
+        const document: Document = findDependencies(initial, buildDirectory)
 
         return some({ ...document, contentHash: none, sourceMap: none })
       }),
@@ -108,10 +113,12 @@ export function createHtmlPlugin(): HashPlugin {
   return html
 }
 
-function findDependencies(document: Document) {
+function findDependencies(document: Document, buildDirectory: string) {
   const directory = dirname(document.filePath)
   const ast = parse(document.contents, { ...parseDefaults, includePositions: true })
-  const dependencies = ast.map(astToTree).flatMap(foldDependencies(isValidDependency(directory, document.contents)))
+  const dependencies = ast
+    .map(astToTree)
+    .flatMap(foldDependencies(isValidDependency(buildDirectory, directory, document.contents)))
 
   return { ...document, dependencies }
 }
@@ -123,7 +130,7 @@ function astToTree(ast: HtmlAst): Tree<HtmlAst> {
   }
 }
 
-function isValidDependency(directory: string, contents: string) {
+function isValidDependency(buildDirectory: string, directory: string, contents: string) {
   return (ast: HtmlAst): readonly Dependency[] => {
     if (ast.type !== 'element' || !(ast.tagName.toLowerCase() in searchMap)) {
       return []
@@ -133,11 +140,11 @@ function isValidDependency(directory: string, contents: string) {
 
     return ast.attributes
       .filter(({ key }) => attributesToSearch.includes(key))
-      .map(getDependency(directory, contents, ast))
+      .map(getDependency(buildDirectory, directory, contents, ast))
   }
 }
 
-function getDependency(directory: string, contents: string, ast: HtmlAst) {
+function getDependency(buildDirectory: string, directory: string, contents: string, ast: HtmlAst) {
   const { position } = ast
   const astStart = position.start.index
   const astEnd = position.end.index
@@ -146,7 +153,8 @@ function getDependency(directory: string, contents: string, ast: HtmlAst) {
   return (attr: HtmlAttribute): Dependency => {
     const start = findSourceIndex(sourceString, attr)
     const end = start + attr.value.length
-    const filePath = resolvePackage({ moduleSpecifier: attr.value, directory, extensions: ['.js'] })
+    const relativeSpecifier = ensureRelativeSpecifier(attr.value, buildDirectory, directory)
+    const filePath = resolvePackage({ moduleSpecifier: relativeSpecifier, directory, extensions: ['.js'] })
 
     const dep: Dependency = {
       specifier: attr.value,
@@ -194,4 +202,12 @@ function formatSingleQuotes(attr: HtmlAttribute): string {
 
 function formatDoubleQuotes(attr: HtmlAttribute): string {
   return `${attr.key}="${attr.value}"`
+}
+
+function ensureRelativeSpecifier(specifier: string, buildDirectory: string, directory: string) {
+  if (specifier.startsWith('/')) {
+    return ensureRelative(relative(directory, resolve(buildDirectory, specifier.slice(1))))
+  }
+
+  return specifier
 }

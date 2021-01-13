@@ -1,13 +1,12 @@
 import remapping from '@ampproject/remapping'
 import { ask, doEffect } from '@typed/fp'
 import { pipe } from 'fp-ts/lib/function'
-import { fold, isNone, none } from 'fp-ts/lib/Option'
+import { fold, isNone, none, some } from 'fp-ts/lib/Option'
 import MagicString from 'magic-string'
 import { basename, extname } from 'path'
 
 import { DocumentRegistryEnv } from '../application/model'
 import { Document } from '../domain/model'
-import { getHashFor } from './hashes/getHashFor'
 import { sha512Hash } from './sha512Hash'
 
 const sourceMapExt = '.map'
@@ -71,7 +70,7 @@ export function rewriteDocumentContents(document: Document, f: (magicString: Mag
       filePath: sourceMapPath,
       fileExtension: document.fileExtension + sourceMapExt,
       contents: updatedSourceMapContents,
-      contentHash: getHashFor(document, document.fileExtension).contentHash,
+      contentHash: some({ type: 'hashFor', filePath: document.filePath }),
       dependencies: [],
       sourceMap: none,
       isBase64Encoded: false,

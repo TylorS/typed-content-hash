@@ -1,20 +1,24 @@
-import { chain, deepEqualsEq, doEffect, Effect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
+import { deepEqualsEq, doEffect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
+import builtinModules from 'builtin-modules'
 import { eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
-import { isNone, some } from 'fp-ts/lib/Option'
-import { getEq } from 'fp-ts/lib/ReadonlyArray'
-import { fst } from 'fp-ts/lib/ReadonlyTuple'
+import { isSome, none, Option, some } from 'fp-ts/lib/Option'
+import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
 import { dirname, extname } from 'path'
 import { CompilerOptions, Project } from 'ts-morph'
+import { red, yellow } from 'typed-colors'
 import { getDefaultCompilerOptions } from 'typescript'
 
-import { LoggerEnv } from '../../common/logging'
-import { Dependency, Document, FileContents, FileExtension, FilePath } from '../../domain'
-import { ModuleSpecifier } from '../../domain/model/ModuleSpecifier'
-import { HashPlugin, HashPluginFactory } from '../provideHashDirectoryEnv'
-import { createPlugin } from './createPlugin'
+import { debug } from '../../application/services/logging'
+import { Dependency, Document } from '../../domain/model'
+import { dependencyEq } from '../dependencyEq'
+import { fsReadFile } from '../fsReadFile'
+import { getHashFor } from '../hashes/getHashFor'
+import { HashPlugin } from '../HashPlugin'
 import { resolvePathFromSourceFile } from './resolvePathFromSourceFile'
 import { createResolveTsConfigPaths, TsConfigPathsResolver } from './resolveTsConfigPaths'
+
+const specifiersToSkip = builtinModules
 
 const resolvePath = memoize(
   getTupleEq(
@@ -32,6 +36,8 @@ export type JavascriptPluginOptions = {
 }
 
 const multiSeparatedExtensions = ['.js.map.proxy.js', '.d.ts.map', '.js.map', '.d.ts']
+const simpleExtensions = ['.js', '.ts', '.jsx', '.tsx']
+const supportedExtensions = [...multiSeparatedExtensions, ...simpleExtensions]
 
 const getFileExtension = (filePath: string) => {
   for (const extension of multiSeparatedExtensions) {
@@ -59,25 +65,23 @@ const stripPostfix = (s: string) => {
   return s
 }
 
-const EXTENSIONS: Record<string, readonly string[]> = {
-  '.js': ['.js', '.css', '.json'],
-  '.js.map.proxy.js': ['.js.map', '.map', '.js'],
-  '.d.ts': ['.d.ts', '.ts', '.json'],
+const EXTENSIONLESS_EXTENSIONS: Record<string, readonly string[]> = {
+  '.js': ['.js', '.jsx'],
+  '.jsx': ['.jsx', '.js'],
+  '.js.map.proxy.js': ['.js.map.proxy.js', '.js.map', '.js'],
+  '.d.ts': ['.d.ts', '.ts'],
 }
 
 const getExtensions = (extension: string) => {
-  if (extension in EXTENSIONS) {
-    return EXTENSIONS[extension]!
+  if (extension in EXTENSIONLESS_EXTENSIONS) {
+    return EXTENSIONLESS_EXTENSIONS[extension]!
   }
 
   return [extension]
 }
 
-export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
-  options,
-  { compilerOptions = getDefaultCompilerOptions() },
-): HashPlugin => {
-  const base = createPlugin({ ...options, dts: true, sourceMaps: true }, ['!.js.map.proxy.js', '.js'])
+export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPlugin => {
+  const { compilerOptions = getDefaultCompilerOptions() } = options
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
     compilerOptions: { ...compilerOptions, allowJs: true },
@@ -86,82 +90,90 @@ export const javascriptPlugin: HashPluginFactory<JavascriptPluginOptions> = (
     useInMemoryFileSystem: true,
   })
 
-  const read = createReadDocument(base, project, pathsResolver)
-
-  return {
-    ...base,
-    readDocument: (path) =>
+  const javascript: HashPlugin = {
+    readFilePath: (filePath: string) =>
       doEffect(function* () {
-        const document = yield* read(path)
+        const ext = getFileExtension(filePath)
 
-        return [document, new Map()] as const
+        if (!supportedExtensions.includes(ext)) {
+          yield* debug(`${red(`[JS]`)} Unsupported file extension ${filePath}`)
+
+          return none
+        }
+
+        const shouldUseHashFor = multiSeparatedExtensions.includes(ext)
+
+        yield* debug(`${yellow(`[JS]`)} Reading ${filePath}...`)
+        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
+        const withFileExtension: Document = { ...initial, fileExtension: ext }
+        yield* debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`)
+        const document = yield* findDependencies(
+          project,
+          pathsResolver,
+          shouldUseHashFor ? getHashFor(withFileExtension, '.js') : withFileExtension,
+        )
+
+        return some(document)
       }),
   }
+
+  return javascript
 }
 
-function createReadDocument(base: HashPlugin, project: Project, pathsResolver: TsConfigPathsResolver) {
-  function findDependencies(document: Document): Pure<Document> {
-    const contents = FileContents.unwrap(document.contents)
-    const sourceFile =
-      project.getSourceFile(FilePath.unwrap(document.filePath)) ||
-      project.createSourceFile(FilePath.unwrap(document.filePath), contents)
+function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver, document: Document): Pure<Document> {
+  const contents = document.contents
+  const sourceFile = project.getSourceFile(document.filePath) || project.createSourceFile(document.filePath, contents)
 
-    const sourceFilePath = sourceFile.getFilePath()
-    const extension = getFileExtension(sourceFilePath)
-    const stringLiterals = [
-      ...sourceFile.getImportStringLiterals(),
-      ...sourceFile
-        .getExportDeclarations()
-        .map((d) => d.getModuleSpecifier())
-        .filter(isNotUndefined),
-    ]
+  const sourceFilePath = sourceFile.getFilePath()
+  const extension = getFileExtension(sourceFilePath)
+  const stringLiterals = [
+    ...sourceFile.getImportStringLiterals(),
+    ...sourceFile
+      .getExportDeclarations()
+      .map((d) => d.getModuleSpecifier())
+      .filter(isNotUndefined),
+  ]
 
-    return pipe(
-      stringLiterals.map((literal) => {
-        const specifier = stripSpecifier(literal.getText())
+  return pipe(
+    stringLiterals.map((literal) => {
+      const specifier = stripSpecifier(literal.getText())
 
-        return pipe(
-          resolvePath({
-            moduleSpecifier: specifier,
-            directory: dirname(sourceFilePath),
-            pathsResolver,
-            extensions: getExtensions(extension),
-          }),
-          map(
-            (filePath): Dependency => {
-              const start = literal.getStart() + 1
-              const end = literal.getEnd() - 1
-              const dep: Dependency = {
-                specifier: ModuleSpecifier.wrap(specifier),
-                filePath,
-                fileExtension: FileExtension.wrap(extension),
-                position: [start, end],
-              }
+      if (specifiersToSkip.includes(specifier)) {
+        return Pure.of(none)
+      }
 
-              return dep
-            },
-          ),
-        )
+      return pipe(
+        resolvePath({
+          moduleSpecifier: specifier,
+          directory: dirname(sourceFilePath),
+          pathsResolver,
+          extensions: getExtensions(extension),
+        }),
+        map(
+          (filePath): Option<Dependency> => {
+            const start = literal.getStart() + 1
+            const end = literal.getEnd() - 1
+            const dep: Dependency = {
+              specifier,
+              filePath,
+              fileExtension: getFileExtension(filePath),
+              position: { start, end },
+            }
+
+            return some(dep)
+          },
+        ),
+      )
+    }),
+    zip,
+    map(
+      (dependencies): Document => ({
+        ...document,
+        dependencies: pipe(
+          dependencies.filter(isSome).map((o) => o.value),
+          uniq(dependencyEq),
+        ),
       }),
-      zip,
-      map((dependencies): Document => ({ ...document, dependencies })),
-    )
-  }
-
-  function getDocumentDependencies(document: Document): Effect<LoggerEnv, Document> {
-    if (isNone(document.dts)) {
-      return findDependencies(document)
-    }
-
-    const jsFile = findDependencies(document)
-    const dtsFile = findDependencies(document.dts.value)
-
-    return pipe(
-      zip([jsFile, dtsFile]),
-      map(([js, dts]) => ({ ...js, dts: some(dts) })),
-    )
-  }
-
-  return (path: FilePath): Effect<LoggerEnv, Document> =>
-    pipe(path, base.readDocument, map(fst), chain(getDocumentDependencies))
+    ),
+  )
 }

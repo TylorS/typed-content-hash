@@ -9,7 +9,7 @@
     "typed-content-hash": "lib/cli/content-hash.js"
   },
   "scripts": {
-    "build": "rimraf lib && tsc --outDir lib",
+    "build": "rimraf lib && tsc --outDir lib --module esnext",
     "test": "concurrently 'npm:lint' 'npm:unit-test'",
     "unit-test": "mocha -r ts-node/register 'src/**/*.test.ts'",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx --fix",
@@ -42,6 +42,7 @@
     "@ampproject/remapping": "^1.0.0",
     "@typed/fp": "0.0.23",
     "base64url": "^3.0.1",
+    "builtin-modules": "^3.2.0",
     "css-tree": "^1.1.2",
     "fp-ts": "^2.9.3",
     "io-ts": "^2.2.13",

@@ -5,7 +5,9 @@ import { resolve } from 'path'
 import { getDefaultCompilerOptions } from 'typescript'
 import yargs from 'yargs'
 
-import { defaultPlugins, rewriteDirectory } from '../content-hashes'
+import { LogLevel } from '../content-hashes/application/services/logging'
+import { contentHashDirectory } from '../content-hashes/contentHashDirectory'
+import { createJavascriptPlugin } from '../content-hashes/infrastructure/plugins/javascript'
 import { findTsConfig } from './findTsConfig'
 
 const options = yargs
@@ -34,7 +36,23 @@ const options = yargs
     type: 'string',
     description: 'Base URL to use when rewriting imports/exports',
   })
+  .options('logLevel', {
+    type: 'string',
+    choices: ['debug', 'info', 'error'] as const,
+    default: 'info',
+  })
   .help().argv
+
+function getLogLevel(option: string) {
+  switch (option) {
+    case 'debug':
+      return LogLevel.Debug
+    case 'error':
+      return LogLevel.Error
+    default:
+      return LogLevel.Info
+  }
+}
 
 const directory = resolve(process.cwd(), options.directory)
 
@@ -44,19 +62,21 @@ if (!existsSync(directory) || !statSync(directory).isDirectory()) {
 
 const tsConfig = findTsConfig({ directory: process.cwd(), configFileName: options.tsConfig })
 
-rewriteDirectory({
-  directory: directory,
-  plugins: defaultPlugins,
+contentHashDirectory({
+  directory,
   hashLength: options.hashLength ?? Infinity,
-  pluginEnv: {
-    compilerOptions: pipe(
-      tsConfig,
-      map((t) => t.compilerOptions),
-      getOrElse(getDefaultCompilerOptions),
-    ),
-  },
   assetManifest: resolve(directory, options.assetManifest),
   baseUrl: options.baseUrl,
+  plugins: [
+    createJavascriptPlugin({
+      compilerOptions: pipe(
+        tsConfig,
+        map((t) => t.compilerOptions),
+        getOrElse(getDefaultCompilerOptions),
+      ),
+    }),
+  ],
+  logLevel: getLogLevel(options.logLevel),
 }).catch((error) => {
   console.error(error)
 

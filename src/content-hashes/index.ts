@@ -1,5 +1,2 @@
-export * from './application'
-export * from './domain'
-export * as infra from './infrastructure'
-export * from './infrastructure/plugins'
-export * from './rewriteDirectory'
+export * from './contentHashDirectory'
+export * from './domain/model'

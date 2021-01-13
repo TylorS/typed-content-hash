@@ -1,4 +1,4 @@
-import { doEffect, EnvOf, log, provideAll, provideSome, toPromise } from '@typed/fp'
+import { doEffect, log, provideAll, provideSome, toPromise } from '@typed/fp'
 import { pipe } from 'fp-ts/lib/function'
 import { none } from 'fp-ts/lib/Option'
 import { resolve } from 'path'
@@ -22,13 +22,14 @@ import { topoSortDocs } from './infrastructure/toposortDocs'
 
 export type ContentHashOptions = {
   readonly directory: string
+  readonly assetManifest: string
+  readonly hashLength: number
   readonly plugins: ReadonlyArray<HashPlugin>
+
   readonly baseUrl?: string
+  readonly documentRegistry?: DocumentRegistry
   readonly logLevel?: LogLevel
   readonly logPrefix?: string
-  readonly documentRegistry?: DocumentRegistry
-  readonly hashLength: number
-  readonly assetManifest: string
 }
 
 const DEFAULT_LOG_LEVEL = LogLevel.Error
@@ -40,7 +41,9 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     logLevel = DEFAULT_LOG_LEVEL,
     logPrefix = DEFAULT_LOG_PREFIX,
     documentRegistry = new Map(),
+    hashLength,
     plugins,
+    baseUrl,
   } = options
 
   const readFilePath = createReadFilePath(plugins)
@@ -65,27 +68,27 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     return registry
   })
 
-  const hashEnv: EnvOf<typeof hashDirectory> = {
-    ...documentRegistryEnv,
-    ...loggerEnv,
-    readDirectory: fsReadDirectory,
-    readDependencies: fsReadDependencies,
-    toposortDocuments: topoSortDocs,
-    readFilePath,
-    rewriteSourceMapUrls: () => rewriteSourceMapUrls,
-    rewriteDependencies: (doc) =>
-      pipe(
-        rewriteDependencies(doc),
-        provideSome<RewriteDependenciesImplementationEnv>({ directory: options.directory, baseUrl: options.baseUrl }),
-      ),
-  }
-
   return pipe(
     program,
-    provideSome(hashEnv),
     provideAll({
-      generateAssetManifest: (doc) => generateAssetManfiestFromRegistry(options.directory, doc, options.baseUrl),
-      writeDocuments: fsWriteDocuments,
+      ...documentRegistryEnv,
+      ...loggerEnv,
+      readDirectory: fsReadDirectory,
+      readDependencies: fsReadDependencies,
+      toposortDocuments: topoSortDocs,
+      readFilePath,
+      rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength),
+      rewriteDependencies: (doc) =>
+        pipe(
+          rewriteDependencies(doc),
+          provideSome<RewriteDependenciesImplementationEnv>({
+            hashLength,
+            directory,
+            baseUrl,
+          }),
+        ),
+      generateAssetManifest: (doc) => generateAssetManfiestFromRegistry(directory, doc, hashLength, baseUrl),
+      writeDocuments: (docs) => fsWriteDocuments(docs, hashLength),
     }),
     toPromise,
   )

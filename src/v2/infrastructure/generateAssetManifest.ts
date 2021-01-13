@@ -8,7 +8,12 @@ import { applyOrigin } from './applyOrigin'
 import { ensureRelative } from './ensureRelative'
 import { getHashedPath } from './hashes/getHashedPath'
 
-export const generateAssetManfiestFromRegistry = (directory: string, registry: DocumentRegistry, baseUrl?: string) =>
+export const generateAssetManfiestFromRegistry = (
+  directory: string,
+  registry: DocumentRegistry,
+  hashLength: number,
+  baseUrl?: string,
+) =>
   doEffect(function* () {
     yield* info(`Generating Asset Manifest...`)
 
@@ -16,7 +21,7 @@ export const generateAssetManfiestFromRegistry = (directory: string, registry: D
 
     for (const document of registry.values()) {
       const from = document.filePath
-      const to = getHashedPath(document, registry)
+      const to = getHashedPath(document, registry, hashLength)
 
       manifest[relative(directory, from)] = baseUrl
         ? applyOrigin(directory, to, baseUrl)

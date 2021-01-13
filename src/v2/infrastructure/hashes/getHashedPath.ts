@@ -6,9 +6,9 @@ import { Document } from '../../domain/model'
 import { getContentHash } from './getContentHash'
 import { replaceHash } from './replaceHash'
 
-export const getHashedPath = (document: Document, registry: DocumentRegistry): string =>
+export const getHashedPath = (document: Document, registry: DocumentRegistry, hashLength: number): string =>
   pipe(
-    getContentHash(document, registry),
+    getContentHash(document, registry, hashLength),
     fold(
       () => document.filePath,
       (h) => replaceHash(document.filePath, document.fileExtension, h),

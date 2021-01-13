@@ -15,6 +15,7 @@ const dtsRegex = new RegExp(`.d.ts$`)
 
 export type RewriteDependenciesImplementationEnv = {
   readonly directory: string
+  readonly hashLength: number
   readonly baseUrl?: string
 }
 
@@ -29,7 +30,7 @@ export const rewriteDependencies = (
     return yield* pipe(
       rewriteDocumentContents(
         document,
-        rewriteDocumentDependencies(document, env.documentRegistry, env.directory, env.baseUrl),
+        rewriteDocumentDependencies(document, env.documentRegistry, env.directory, env.hashLength, env.baseUrl),
       ),
     )
   })
@@ -38,11 +39,12 @@ const rewriteDocumentDependencies = (
   document: Document,
   registry: DocumentRegistry,
   directory: string,
+  hashLength: number,
   baseUrl: string | undefined,
 ) => (ms: MagicString) => {
   for (const dep of document.dependencies) {
     const depDoc = registry.get(dep.filePath)!
-    const hashedPath = getHashedPath(depDoc, registry)
+    const hashedPath = getHashedPath(depDoc, registry, hashLength)
 
     if (hashedPath !== dep.filePath) {
       const relativePath = ensureRelative(relative(dirname(document.filePath), hashedPath))

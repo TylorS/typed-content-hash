@@ -7,10 +7,12 @@ import { getHashedPath } from './hashes/getHashedPath'
 
 const writeFile = (path: string, contents: string) => fromTask(() => promises.writeFile(path, contents))
 
-export const fsWriteDocuments = (registry: DocumentRegistry) =>
+export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number) =>
   map(
     constVoid,
     zip(
-      Array.from(registry.values()).map((document) => writeFile(getHashedPath(document, registry), document.contents)),
+      Array.from(registry.values()).map((document) =>
+        writeFile(getHashedPath(document, registry, hashLength), document.contents),
+      ),
     ),
   )

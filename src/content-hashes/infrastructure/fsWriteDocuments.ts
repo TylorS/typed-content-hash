@@ -1,7 +1,7 @@
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { doEffect, fromTask, map, zip } from '@typed/fp'
 import { constVoid } from 'fp-ts/lib/function'
-import { existsSync, promises } from 'fs'
+import { promises } from 'fs'
 
 import { DocumentRegistry } from '../application/model'
 import { getHashedPath } from './hashes/getHashedPath'
@@ -37,7 +37,7 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
             }
           }
 
-          if (!document.isBase64Encoded && existsSync(document.filePath) && pathChanged) {
+          if (!document.isBase64Encoded && pathChanged) {
             yield* unlinkFile(document.filePath)
           }
 
@@ -45,7 +45,7 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
             yield* writeFile(hashedPath, document.contents)
           }
 
-          if (document.isBase64Encoded) {
+          if (document.isBase64Encoded && pathChanged) {
             yield* rename(document.filePath, hashedPath)
           }
         }),

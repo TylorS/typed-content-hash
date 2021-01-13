@@ -1,9 +1,12 @@
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
-import { doEffect, fromTask, map, zip } from '@typed/fp'
-import { constVoid } from 'fp-ts/lib/function'
+import { doEffect, fromTask, zip } from '@typed/fp'
+import { getShow } from 'fp-ts/lib/ReadonlyMap'
+import { showString } from 'fp-ts/lib/Show'
 import { promises } from 'fs'
 
 import { DocumentRegistry } from '../application/model'
+import { debug } from '../application/services/logging'
+import { Document } from '../domain/model'
 import { getHashedPath } from './hashes/getHashedPath'
 import { replaceHash } from './hashes/replaceHash'
 
@@ -12,11 +15,13 @@ const rename = (from: string, to: string) => fromTask(() => promises.rename(from
 const unlinkFile = (path: string) => fromTask(() => promises.unlink(path))
 const sourceMapExt = '.map'
 const sourceMapExtRegex = new RegExp(`${sourceMapExt}$`)
+const showRegistry = getShow(showString, { show: (d: Document) => JSON.stringify(d, null, 2) })
 
-export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number) =>
-  map(
-    constVoid,
-    zip(
+export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number) => {
+  const eff = doEffect(function* () {
+    yield* debug(`Writing registry: ${showRegistry.show(registry)}`)
+
+    yield* zip(
       Array.from(registry.values()).map((document) =>
         doEffect(function* () {
           const hashedPath = getHashedPath(document, registry, hashLength)
@@ -50,5 +55,8 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
           }
         }),
       ),
-    ),
-  )
+    )
+  })
+
+  return eff
+}

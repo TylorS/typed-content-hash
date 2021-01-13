@@ -1,5 +1,4 @@
 import { doEffect } from '@typed/fp'
-import { pipe } from 'fp-ts/lib/function'
 import { none, some } from 'fp-ts/lib/Option'
 import { getMonoid } from 'fp-ts/lib/ReadonlyArray'
 import { foldMap, Tree } from 'fp-ts/lib/Tree'
@@ -16,7 +15,7 @@ export type HtmlAst = {
   readonly type: string
   readonly tagName: string
   readonly attributes: readonly HtmlAttribute[]
-  readonly children: readonly HtmlAst[]
+  readonly children?: readonly HtmlAst[]
   readonly position: {
     readonly start: {
       readonly index: number
@@ -102,7 +101,7 @@ export function createHtmlPlugin(): HashPlugin {
 
         const document: Document = findDependencies(initial)
 
-        return some({ ...document, contentHash: none })
+        return some({ ...document, contentHash: none, sourceMap: none })
       }),
   }
 
@@ -112,9 +111,7 @@ export function createHtmlPlugin(): HashPlugin {
 function findDependencies(document: Document) {
   const directory = dirname(document.filePath)
   const ast = parse(document.contents, { ...parseDefaults, includePositions: true })
-  const dependencies = ast
-    .map(astToTree)
-    .flatMap((tree) => pipe(tree, foldDependencies(isValidDependency(directory, document.contents))))
+  const dependencies = ast.map(astToTree).flatMap(foldDependencies(isValidDependency(directory, document.contents)))
 
   return { ...document, dependencies }
 }

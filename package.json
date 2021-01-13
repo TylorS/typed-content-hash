@@ -9,7 +9,7 @@
     "typed-content-hash": "lib/cli/content-hash.js"
   },
   "scripts": {
-    "build": "rimraf lib && tsc --outDir lib --module esnext",
+    "build": "rimraf lib && tsc --outDir lib",
     "test": "concurrently 'npm:lint' 'npm:unit-test'",
     "unit-test": "mocha -r ts-node/register 'src/**/*.test.ts'",
     "lint": "eslint src --ext .js,.jsx,.ts,.tsx --fix",

@@ -18,7 +18,7 @@ import { HashPlugin } from '../HashPlugin'
 import { resolvePathFromSourceFile } from './resolvePathFromSourceFile'
 import { createResolveTsConfigPaths, TsConfigPathsResolver } from './resolveTsConfigPaths'
 
-const specifiersToSkip = builtinModules
+const specifiersToSkip = [...builtinModules, 'tslib']
 
 const resolvePath = memoize(
   getTupleEq(

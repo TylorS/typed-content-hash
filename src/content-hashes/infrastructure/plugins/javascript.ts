@@ -69,7 +69,7 @@ const EXTENSIONLESS_EXTENSIONS: Record<string, readonly string[]> = {
   '.js': ['.js', '.jsx'],
   '.jsx': ['.jsx', '.js'],
   '.js.map.proxy.js': ['.js.map.proxy.js', '.js.map', '.js'],
-  '.d.ts': ['.d.ts', '.ts'],
+  '.d.ts': ['.d.ts', '.ts', '.js'],
 }
 
 const getExtensions = (extension: string) => {

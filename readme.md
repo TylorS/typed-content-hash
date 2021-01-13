@@ -50,7 +50,7 @@ import { join } from 'path'
 async function main() {
   const registry: DocumentRegistry = await contentHashDirectory({ 
     directory: '/path/to/directory', 
-    plugins: createDefaultPlugins()  
+    plugins: createDefaultPlugins({ buildDirectory: '/path/to/directory' })  
   })
 }
 

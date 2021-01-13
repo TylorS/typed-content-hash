@@ -4,21 +4,28 @@ import { none } from 'fp-ts/lib/Option'
 import { resolve } from 'path'
 import { gray } from 'typed-colors'
 
-import { hashDirectory } from './application/hashDirectory'
-import { DocumentRegistry, DocumentRegistryEnv } from './application/model'
-import { generateAssetManifest } from './application/services/generateAssetManifest'
-import { LoggerEnv, LogLevel } from './application/services/logging'
-import { writeDocuments } from './application/services/writeDocuments'
+import {
+  DocumentRegistry,
+  DocumentRegistryEnv,
+  generateAssetManifest,
+  hashDirectory,
+  LoggerEnv,
+  LogLevel,
+  writeDocuments,
+} from './application'
 import { Document } from './domain/model'
-import { createReadFilePath } from './infrastructure/createReadFilePath'
-import { fsReadDependencies } from './infrastructure/fsReadDependencies'
-import { fsReadDirectory } from './infrastructure/fsReadDirectory'
-import { fsWriteDocuments } from './infrastructure/fsWriteDocuments'
-import { generateAssetManfiestFromRegistry } from './infrastructure/generateAssetManifest'
-import { HashPlugin } from './infrastructure/HashPlugin'
-import { rewriteDependencies, RewriteDependenciesImplementationEnv } from './infrastructure/rewriteDependencies'
-import { rewriteSourceMapUrls } from './infrastructure/rewriteSourceMapUrls'
-import { topoSortDocs } from './infrastructure/toposortDocs'
+import {
+  createReadFilePath,
+  fsReadDependencies,
+  fsReadDirectory,
+  fsWriteDocuments,
+  generateAssetManfiestFromRegistry,
+  HashPlugin,
+  rewriteDependencies,
+  RewriteDependenciesImplementationEnv,
+  rewriteSourceMapUrls,
+  topoSortDocs,
+} from './infrastructure'
 
 export type ContentHashOptions = {
   readonly directory: string

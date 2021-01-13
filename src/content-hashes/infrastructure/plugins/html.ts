@@ -102,7 +102,7 @@ export function createHtmlPlugin(): HashPlugin {
 
         const document: Document = findDependencies(initial)
 
-        return some(document)
+        return some({ ...document, contentHash: none })
       }),
   }
 

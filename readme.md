@@ -34,7 +34,10 @@ Options:
 
 ## API 
 
-For the moment `contentHashDirectory` is the main API function you'd be interested in using. The CLI is a small wrapper around running just this function. There is a plugin API available to expand support to additional file extensions besides the default supported files.
+For the moment `contentHashDirectory` is the main API function you'd be interested in using. The CLI is a small wrapper around running just this function. 
+
+There is a plugin API available to expand support to additional file extensions besides the default supported files. If you're interested in this take a look at `src/content-hashes/infrastructure/plugins` for examples of
+the default plugins.
 
 ### contentHashDirectory :: ContentHashOptions -> Promise DocumentRegistry
 

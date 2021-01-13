@@ -1,5 +1,6 @@
 import { ask, doEffect, Effect, useSome } from '@typed/fp'
 import { pipe } from 'fp-ts/lib/function'
+import { isSome } from 'fp-ts/lib/Option'
 
 import { DocumentRegistry, DocumentRegistryEnv } from '../application/model'
 import { debug, LoggerEnv } from '../application/services/logging'
@@ -16,12 +17,14 @@ export const rewriteSourceMapUrls = (hashLength: number): Effect<DocumentRegistr
     let documentRegistry = env.documentRegistry
 
     for (const document of documentRegistry.values()) {
-      documentRegistry = yield* pipe(
-        rewriteDocumentContents(document, (ms) =>
-          rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
-        ),
-        useSome<DocumentRegistryEnv>({ documentRegistry }),
-      )
+      if (isSome(document.sourceMap)) {
+        documentRegistry = yield* pipe(
+          rewriteDocumentContents(document, (ms) =>
+            rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
+          ),
+          useSome<DocumentRegistryEnv>({ documentRegistry }),
+        )
+      }
     }
 
     return documentRegistry

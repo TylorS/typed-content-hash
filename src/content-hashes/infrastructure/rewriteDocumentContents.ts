@@ -7,6 +7,7 @@ import { basename, extname } from 'path'
 
 import { DocumentRegistryEnv } from '../application/model'
 import { Document } from '../domain/model'
+import { getHashFor } from './hashes/getHashFor'
 import { sha512Hash } from './sha512Hash'
 
 const sourceMapExt = '.map'
@@ -70,7 +71,7 @@ export function rewriteDocumentContents(document: Document, f: (magicString: Mag
       filePath: sourceMapPath,
       fileExtension: document.fileExtension + sourceMapExt,
       contents: updatedSourceMapContents,
-      contentHash: none,
+      contentHash: getHashFor(document, document.fileExtension).contentHash,
       dependencies: [],
       sourceMap: none,
       isBase64Encoded: false,

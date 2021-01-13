@@ -43,7 +43,10 @@ export const hashDirectory = (directory: string) =>
     )
 
     // Sort them all so we can rewrite hashes effectively
-    const documents: readonly Document[] = yield* toposortDocuments([...supportedDocuments, ...dependencies])
+    const documents: readonly Document[] = yield* toposortDocuments([
+      ...supportedDocuments,
+      ...dependencies.filter((d) => !supportedDocumentRegistry.has(d.filePath)),
+    ])
 
     // Rewrite dependencies 1-by-1, recalculating file hashes incrementally to ensure cache-busting functionality.
     yield* info(`Rewriting Hashes...`)

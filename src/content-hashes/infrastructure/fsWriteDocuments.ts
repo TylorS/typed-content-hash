@@ -2,7 +2,7 @@ import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { doEffect, fromTask, zip } from '@typed/fp'
 import { getShow } from 'fp-ts/lib/ReadonlyMap'
 import { showString } from 'fp-ts/lib/Show'
-import { promises } from 'fs'
+import { existsSync, promises } from 'fs'
 
 import { DocumentRegistry } from '../application/model'
 import { debug } from '../application/services/logging'
@@ -42,7 +42,7 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
             }
           }
 
-          if (!document.isBase64Encoded && pathChanged) {
+          if (!document.isBase64Encoded && pathChanged && existsSync(document.filePath)) {
             yield* unlinkFile(document.filePath)
           }
 

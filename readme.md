@@ -20,7 +20,7 @@ $ typed-content-hash --dir build
 Options:
       --version           Show version number                          [boolean]
       --directory, --dir  The directory to apply content hashes
-                                                             [string] [**required**]
+                                                             [string] [required]
       --assetManifest     Filename of asset manifest JSON
                                        [string] [default: "asset-manifest.json"]
   -h, --hashLength        Number of characters to slice from SHA-512 hash
@@ -28,62 +28,30 @@ Options:
       --tsConfig          Relative path to tsconfig from CWD
                                              [string] [default: "tsconfig.json"]
       --baseUrl           Base URL to use when rewriting imports/exports[string]
+      --logLevel  [string] [choices: "debug", "info", "error"] [default: "info"]
       --help              Show help                                    [boolean]
 ```
 
 ## API 
 
-For the moment `rewriteDirectory` is the main API function you'd be interested in using. The CLI is a small 
-wrapper around running just this function.
+For the moment `contentHashDirectory` is the main API function you'd be interested in using. The CLI is a small wrapper around running just this function. There is a plugin API available to expand support to additional file extensions besides the default supported files.
 
-> TODO: Write better documents :smile:
+### contentHashDirectory :: ContentHashOptions -> Promise DocumentRegistry
 
-### rewriteDirectory :: RewriteDirectoryOptions -> Promise WrittenDirectory
+#### Basic Example
 
 ```typescript
-export function rewriteDirectory<Plugins extends ReadonlyArray<HashPluginFactory<any>>>(
-  options: RewriteDirectoryOptions<Plugins>,
-): Promise<WrittenDirectory> 
+import { contentHashDirectory, createDefaultPlugins } from '@typed/content-hash'
+import { join } from 'path'
 
-export type RewriteDirectoryOptions<Plugins extends ReadonlyArray<HashPluginFactory<any>>> = {
-  readonly pluginEnv: HashPluginEnvs<Plugins>
-  readonly directory: string
-  readonly plugins: Plugins
-  readonly hashLength: number
-  readonly assetManifest: string
-  readonly baseUrl?: string
-  readonly logLevel?: LogLevel
-  readonly logPrefix?: string
+async function main() {
+  const registry: DocumentRegistry = await contentHashDirectory({ 
+    directory: '/path/to/directory', 
+    plugins: createDefaultPlugins()  
+  })
 }
 
-export type HashPluginFactory<E> = (options: HashPluginOptions, env: E) => HashPlugin
-
-export interface HashPlugin extends RewriteFileContent, GenerateContentHashes, RewriteDocumentHashes {
-  // Directory HashPlugin is configured to work within
-  readonly directory: Directory
-  // Configured HashLength max
-  readonly hashLength: number
-  // Supported File Extensions
-  readonly fileExtensions: ReadonlyArray<FileExtension>
-  // How to read documents of supported extensions
-  readonly readDocument: (path: FilePath) => Pure<readonly [Document, Hashes['hashes']]>
-}
-
-export interface RewriteFileContent {
-  readonly rewriteFileContent: (document: Document, hashes: ReadonlyMap<FilePath, ContentHash>) => Pure<Document>
-}
-
-export interface GenerateContentHashes {
-  readonly generateContentHashes: (document: Document) => Pure<ReadonlyMap<FilePath, ContentHash>>
-}
-
-
-export interface RewriteDocumentHashes {
-  readonly rewriteDocumentHashes: (
-    documents: readonly Document[],
-    hashes: ReadonlyMap<FilePath, ContentHash>,
-  ) => Pure<readonly Document[]>
-}
+main()
 ```
 
 ## Discussions

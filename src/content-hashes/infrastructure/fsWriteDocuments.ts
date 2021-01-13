@@ -8,6 +8,7 @@ import { getHashedPath } from './hashes/getHashedPath'
 import { replaceHash } from './hashes/replaceHash'
 
 const writeFile = (path: string, contents: string) => fromTask(() => promises.writeFile(path, contents))
+const rename = (from: string, to: string) => fromTask(() => promises.rename(from, to))
 const unlinkFile = (path: string) => fromTask(() => promises.unlink(path))
 const sourceMapExt = '.map'
 const sourceMapExtRegex = new RegExp(`${sourceMapExt}$`)
@@ -31,16 +32,24 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
 
               document = {
                 ...document,
-                contents: JSON.stringify({ ...raw, file: replaceHash(raw.file, extension, hash) }),
+                contents: JSON.stringify({ ...raw, file: replaceHash(raw.file, extension, hash) }, null, 2),
               }
             }
           }
 
-          if (existsSync(document.filePath) && pathChanged) {
-            yield* unlinkFile(document.filePath)
+          if (!document.isBase64Encoded) {
+            if (existsSync(document.filePath) && pathChanged) {
+              yield* unlinkFile(document.filePath)
+            }
+
+            if (!document.isBase64Encoded) {
+              yield* writeFile(hashedPath, document.contents)
+            }
           }
 
-          return yield* writeFile(hashedPath, document.contents)
+          if (document.isBase64Encoded) {
+            yield* rename(document.filePath, hashedPath)
+          }
         }),
       ),
     ),

@@ -1,4 +1,3 @@
-import { fromTask } from '@typed/fp'
 import { extname } from 'path'
 import resolve from 'resolve'
 
@@ -13,19 +12,12 @@ export type ResolvePackageOptions = {
 export function resolvePackage(options: ResolvePackageOptions) {
   const { moduleSpecifier, directory, extensions } = options
 
-  return fromTask(
-    () =>
-      new Promise<string>((res) =>
-        res(
-          resolve.sync(moduleSpecifier, {
-            basedir: directory,
-            moduleDirectory,
-            extensions,
-            packageIterator,
-          }),
-        ),
-      ),
-  )
+  return resolve.sync(moduleSpecifier, {
+    basedir: directory,
+    moduleDirectory,
+    extensions,
+    packageIterator,
+  })
 }
 
 const packageIterator = (request: string, _: string, defaultCanditates: () => string[]): string[] => {

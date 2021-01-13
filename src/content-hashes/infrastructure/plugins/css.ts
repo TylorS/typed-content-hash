@@ -1,4 +1,4 @@
-import { cond, doEffect, Pure, zip } from '@typed/fp'
+import { cond, doEffect } from '@typed/fp'
 import { Atrule, CssNode, parse, Url, walk } from 'css-tree'
 import { none, some } from 'fp-ts/lib/Option'
 import { basename, dirname, extname } from 'path'
@@ -42,49 +42,39 @@ export function createCssPlugin(): HashPlugin {
         }
 
         yield* debug(`${yellow(`[CSS]`)} Reading ${filePath}...`)
-        const shouldUseHashFor = ext === sourceMapExt
         const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
         const withFileExtension: Document = { ...initial, fileExtension: ext }
 
         // Map files should just get setup with appropriate hashes
-        if (shouldUseHashFor) {
+        if (ext === sourceMapExt) {
           return some(getHashFor(withFileExtension, '.css'))
         }
 
         yield* debug(`${yellow(`[CSS]`)} Finding dependencies ${filePath}...`)
-        const document = yield* findDependencies(withFileExtension)
 
-        return some(document)
+        return some(findDependencies(withFileExtension))
       }),
   }
 
   return css
 }
 
-function findDependencies(document: Document) {
-  const eff = doEffect(function* () {
-    const filename = basename(document.filePath)
-    const ast = parse(document.contents, { filename, positions: true })
-    const dependencies = new Set<Dependency>()
+function findDependencies(document: Document): Document {
+  const filename = basename(document.filePath)
+  const ast = parse(document.contents, { filename, positions: true })
+  const dependencies = new Set<Dependency>()
 
-    const effects: Array<Pure<void>> = []
+  walk(ast, (node) =>
+    cond(
+      [
+        cond.create(isAtRule, (node) => parseAtRule(document.filePath, node, dependencies)),
+        cond.create(isUrl, (node) => parseUrl(document.filePath, node, dependencies)),
+      ],
+      node,
+    ),
+  )
 
-    walk(ast, (node) =>
-      cond(
-        [
-          cond.create(isAtRule, (node) => effects.push(parseAtRule(document.filePath, node, dependencies))),
-          cond.create(isUrl, (node) => effects.push(parseUrl(document.filePath, node, dependencies))),
-        ],
-        node,
-      ),
-    )
-
-    yield* zip(effects)
-
-    return { ...document, dependencies: Array.from(dependencies) }
-  })
-
-  return eff
+  return { ...document, dependencies: Array.from(dependencies) }
 }
 
 const isAtRule = (node: CssNode): node is NonNullableKeys<Atrule, 'loc'> => node.type === 'Atrule' && !!node.loc
@@ -120,51 +110,43 @@ const findAtRuleSpecifier = (rule: NonNullableKeys<Atrule, 'loc'>): SpecifierPos
 type SpecifierPosition = { specifier: string; position: Dependency['position'] }
 
 const parseAtRule = (filePath: string, rule: NonNullableKeys<Atrule, 'loc'>, dependencies: Set<Dependency>) => {
-  const eff = doEffect(function* () {
-    const specifier = findAtRuleSpecifier(rule)
+  const specifier = findAtRuleSpecifier(rule)
 
-    if (specifier) {
-      const specifierFilePath = yield* resolvePackage({
-        directory: dirname(filePath),
-        moduleSpecifier: specifier.specifier,
-        extensions: supportedExtensions,
-      })
+  if (specifier) {
+    const specifierFilePath = resolvePackage({
+      directory: dirname(filePath),
+      moduleSpecifier: specifier.specifier,
+      extensions: supportedExtensions,
+    })
 
-      const dependency: Dependency = {
-        ...specifier,
-        filePath: specifierFilePath,
-        fileExtension: getFileExtension(specifierFilePath),
-      }
-
-      dependencies.add(dependency)
+    const dependency: Dependency = {
+      ...specifier,
+      filePath: specifierFilePath,
+      fileExtension: getFileExtension(specifierFilePath),
     }
-  })
 
-  return eff
+    dependencies.add(dependency)
+  }
 }
 
 const parseUrl = (filePath: string, url: NonNullableKeys<Url, 'loc'>, dependencies: Set<Dependency>) => {
-  const eff = doEffect(function* () {
-    const specifier = findUrlSpecifier(url)
+  const specifier = findUrlSpecifier(url)
 
-    if (specifier) {
-      const specifierFilePath = yield* resolvePackage({
-        directory: dirname(filePath),
-        moduleSpecifier: specifier.specifier,
-        extensions: supportedExtensions,
-      })
+  if (specifier) {
+    const specifierFilePath = resolvePackage({
+      directory: dirname(filePath),
+      moduleSpecifier: specifier.specifier,
+      extensions: supportedExtensions,
+    })
 
-      const dependency: Dependency = {
-        ...specifier,
-        filePath: specifierFilePath,
-        fileExtension: getFileExtension(specifierFilePath),
-      }
-
-      dependencies.add(dependency)
+    const dependency: Dependency = {
+      ...specifier,
+      filePath: specifierFilePath,
+      fileExtension: getFileExtension(specifierFilePath),
     }
-  })
 
-  return eff
+    dependencies.add(dependency)
+  }
 }
 
 const findUrlSpecifier = (url: NonNullableKeys<Url, 'loc'>): SpecifierPosition | null => {

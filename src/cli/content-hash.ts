@@ -7,6 +7,8 @@ import yargs from 'yargs'
 
 import { LogLevel } from '../content-hashes/application/services/logging'
 import { contentHashDirectory } from '../content-hashes/contentHashDirectory'
+import { createCssPlugin } from '../content-hashes/infrastructure/plugins/css'
+import { createHtmlPlugin } from '../content-hashes/infrastructure/plugins/html'
 import { createJavascriptPlugin } from '../content-hashes/infrastructure/plugins/javascript'
 import { findTsConfig } from './findTsConfig'
 
@@ -75,6 +77,8 @@ contentHashDirectory({
         getOrElse(getDefaultCompilerOptions),
       ),
     }),
+    createCssPlugin(),
+    createHtmlPlugin(),
   ],
   logLevel: getLogLevel(options.logLevel),
 }).catch((error) => {

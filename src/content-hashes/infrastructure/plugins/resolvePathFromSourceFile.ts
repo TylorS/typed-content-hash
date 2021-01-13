@@ -17,5 +17,5 @@ export function resolvePathFromSourceFile(options: ResolvePathFromSourceFileOpti
     return Pure.of(match.value)
   }
 
-  return resolvePackage(options)
+  return Pure.fromIO(() => resolvePackage(options))
 }

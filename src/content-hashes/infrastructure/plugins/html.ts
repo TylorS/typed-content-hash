@@ -142,9 +142,9 @@ function isValidDependency(directory: string, contents: string) {
 
 function getDependency(directory: string, contents: string, ast: HtmlAst) {
   const { position } = ast
-  const start = position.start.index
-  const end = position.end.index
-  const sourceString = contents.slice(start, end)
+  const astStart = position.start.index
+  const astEnd = position.end.index
+  const sourceString = contents.slice(astStart, astEnd)
 
   return (attr: HtmlAttribute): Dependency => {
     const start = findSourceIndex(sourceString, attr)
@@ -156,8 +156,8 @@ function getDependency(directory: string, contents: string, ast: HtmlAst) {
       filePath: filePath,
       fileExtension: extname(filePath),
       position: {
-        start,
-        end,
+        start: start + astStart,
+        end: end + astStart,
       },
     }
 

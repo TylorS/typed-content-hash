@@ -2,7 +2,7 @@ import { deepEqualsEq, doEffect, isNotUndefined, map, memoize, Pure, zip } from 
 import builtinModules from 'builtin-modules'
 import { eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
-import { isSome, none, Option, some } from 'fp-ts/lib/Option'
+import { isSome, map as mapOption, none, some } from 'fp-ts/lib/Option'
 import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
 import { basename, dirname } from 'path'
 import { CompilerOptions, Project } from 'ts-morph'
@@ -164,7 +164,7 @@ function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver
           extensions: getExtensions(extension),
         }),
         map(
-          (filePath): Option<Dependency> => {
+          mapOption((filePath) => {
             const start = literal.getStart() + 1
             const end = literal.getEnd() - 1
             const dep: Dependency = {
@@ -173,9 +173,8 @@ function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver
               fileExtension: getFileExtension(filePath),
               position: { start, end },
             }
-
-            return some(dep)
-          },
+            return dep
+          }),
         ),
       )
     }),

@@ -11,6 +11,7 @@ import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { HashPlugin } from '../HashPlugin'
 import { getFileExtension } from './getFileExtension'
+import { isExternalUrl } from './isExternalUrl'
 import { resolvePackage } from './resolvePackage'
 
 export type HtmlAst = {
@@ -158,6 +159,10 @@ function getDependency(buildDirectory: string, directory: string, contents: stri
     const end = start + attr.value.length
     const relativeSpecifier = ensureRelativeSpecifier(attr.value, buildDirectory, directory)
     const hasFileExtension = extname(relativeSpecifier) !== ''
+
+    if (isExternalUrl(relativeSpecifier)) {
+      return none
+    }
 
     try {
       const filePath = resolvePackage({ moduleSpecifier: relativeSpecifier, directory, extensions: ['.js'] })

@@ -10,6 +10,7 @@ import { fsReadFile } from '../fsReadFile'
 import { getHashFor } from '../hashes/getHashFor'
 import { HashPlugin } from '../HashPlugin'
 import { getFileExtension } from './getFileExtension'
+import { isExternalUrl } from './isExternalUrl'
 import { resolvePackage } from './resolvePackage'
 
 export type NonNullableKeys<A, Keys extends keyof A> = Readonly<Omit<A, Keys>> &
@@ -100,7 +101,7 @@ type SpecifierPosition = { specifier: string; position: Dependency['position'] }
 const parseAtRule = (filePath: string, rule: NonNullableKeys<Atrule, 'loc'>, dependencies: Set<Dependency>) => {
   const specifier = findAtRuleSpecifier(rule)
 
-  if (specifier) {
+  if (specifier && !isExternalUrl(specifier.specifier)) {
     const specifierFilePath = resolvePackage({
       directory: dirname(filePath),
       moduleSpecifier: specifier.specifier,
@@ -120,7 +121,7 @@ const parseAtRule = (filePath: string, rule: NonNullableKeys<Atrule, 'loc'>, dep
 const parseUrl = (filePath: string, url: NonNullableKeys<Url, 'loc'>, dependencies: Set<Dependency>) => {
   const specifier = findUrlSpecifier(url)
 
-  if (specifier) {
+  if (specifier && !isExternalUrl(specifier.specifier)) {
     const specifierFilePath = resolvePackage({
       directory: dirname(filePath),
       moduleSpecifier: specifier.specifier,

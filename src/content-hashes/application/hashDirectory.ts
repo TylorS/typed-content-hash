@@ -14,11 +14,10 @@ import { rewriteDependencies } from './services/rewriteDependencies'
 import { rewriteSourceMapUrls } from './services/rewriteSourceMapUrls'
 import { toposortDocuments } from './services/toposortDocuments'
 
-const uniqDocumentPaths = uniq(
-  pipe(
-    ordString,
-    contramap((d: Document) => d.filePath),
-  ),
+const uniqDocumentPaths = pipe(
+  ordString,
+  contramap((d: Document) => d.filePath),
+  uniq,
 )
 
 export const hashDirectory = (directory: string) =>

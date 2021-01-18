@@ -10,6 +10,7 @@ import { Dependency, Document } from '../../domain/model'
 import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { HashPlugin } from '../HashPlugin'
+import { getFileExtension } from './getFileExtension'
 import { resolvePackage } from './resolvePackage'
 
 export type HtmlAst = {
@@ -92,7 +93,7 @@ export function createHtmlPlugin({ buildDirectory }: HtmlPuginOptions): HashPlug
   const html: HashPlugin = {
     readFilePath: (filePath) =>
       doEffect(function* () {
-        const ext = extname(filePath)
+        const ext = getFileExtension(filePath)
 
         if (!supportedFileExtension.includes(ext)) {
           yield* debug(`${red(`[HTML]`)} Unsupported file extension ${filePath}`)
@@ -164,7 +165,7 @@ function getDependency(buildDirectory: string, directory: string, contents: stri
       const dep: Dependency = {
         specifier: attr.value,
         filePath: filePath,
-        fileExtension: extname(filePath),
+        fileExtension: getFileExtension(filePath),
         position: {
           start: start + astStart,
           end: end + astStart,

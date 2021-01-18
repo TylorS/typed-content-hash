@@ -1,7 +1,7 @@
 import { cond, doEffect } from '@typed/fp'
 import { Atrule, CssNode, parse, Url, walk } from 'css-tree'
 import { none, some } from 'fp-ts/lib/Option'
-import { basename, dirname, extname } from 'path'
+import { basename, dirname } from 'path'
 import { red, yellow } from 'typed-colors'
 
 import { debug } from '../../application/services/logging'
@@ -9,25 +9,14 @@ import { Dependency, Document } from '../../domain/model'
 import { fsReadFile } from '../fsReadFile'
 import { getHashFor } from '../hashes/getHashFor'
 import { HashPlugin } from '../HashPlugin'
+import { getFileExtension } from './getFileExtension'
 import { resolvePackage } from './resolvePackage'
 
 export type NonNullableKeys<A, Keys extends keyof A> = Readonly<Omit<A, Keys>> &
   { readonly [K in Keys]-?: NonNullable<A[K]> }
 
-const multiSeparatedExtensions = ['.css.map']
-const simpleExtensions = ['.css']
-const supportedExtensions = [...multiSeparatedExtensions, ...simpleExtensions]
+const supportedExtensions = ['.css.map', '.css']
 const sourceMapExt = '.map'
-
-const getFileExtension = (filePath: string) => {
-  for (const extension of multiSeparatedExtensions) {
-    if (filePath.endsWith(extension)) {
-      return extension
-    }
-  }
-
-  return extname(filePath)
-}
 
 export function createCssPlugin(): HashPlugin {
   const css: HashPlugin = {

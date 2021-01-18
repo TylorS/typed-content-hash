@@ -19,8 +19,10 @@ export const rewriteSourceMapUrls = (hashLength: number): Effect<DocumentRegistr
     for (const document of documentRegistry.values()) {
       if (isSome(document.sourceMap)) {
         documentRegistry = yield* pipe(
-          rewriteDocumentContents(document, (ms) =>
-            rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
+          rewriteDocumentContents(
+            document,
+            (ms) => rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
+            true,
           ),
           useSome<DocumentRegistryEnv>({ documentRegistry }),
         )

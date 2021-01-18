@@ -31,7 +31,11 @@ const remapSourceMaps = (current: Document, updated: Document): Document => ({
   contents: JSON.stringify(JSON.parse(remapping([updated.contents, current.contents], () => null).toString()), null, 2),
 })
 
-export function rewriteDocumentContents(document: Document, f: (magicString: MagicString) => void) {
+export function rewriteDocumentContents(
+  document: Document,
+  f: (magicString: MagicString) => void,
+  skipSourceMap: boolean,
+) {
   return doEffect(function* () {
     const { documentRegistry } = yield* ask<DocumentRegistryEnv>()
 
@@ -58,7 +62,7 @@ export function rewriteDocumentContents(document: Document, f: (magicString: Mag
     })
     const updatedRegistry = new Map([...documentRegistry, [filePath, updatedDocument]])
 
-    if (isNone(sourceMap)) {
+    if (skipSourceMap || isNone(sourceMap)) {
       return updatedRegistry
     }
 

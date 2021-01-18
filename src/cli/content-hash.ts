@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 import { pipe } from 'fp-ts/lib/function'
 import { getOrElse, map } from 'fp-ts/lib/Option'
 import { existsSync, statSync } from 'fs'

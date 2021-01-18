@@ -31,6 +31,7 @@ export const rewriteDependencies = (
       rewriteDocumentContents(
         document,
         rewriteDocumentDependencies(document, env.documentRegistry, env.directory, env.hashLength, env.baseUrl),
+        false,
       ),
     )
   })

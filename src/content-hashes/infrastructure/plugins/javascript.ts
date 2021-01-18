@@ -7,7 +7,7 @@ import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
 import { dirname } from 'path'
 import { CompilerOptions, Project } from 'ts-morph'
 import { red, yellow } from 'typed-colors'
-import { getDefaultCompilerOptions } from 'typescript'
+import { getDefaultCompilerOptions, SyntaxKind } from 'typescript'
 
 import { debug } from '../../application/services/logging'
 import { Dependency, Document } from '../../domain/model'
@@ -125,12 +125,16 @@ function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver
 
   const sourceFilePath = sourceFile.getFilePath()
   const extension = getFileExtension(sourceFilePath)
+
   const stringLiterals = [
     ...sourceFile.getImportStringLiterals(),
     ...sourceFile
       .getExportDeclarations()
       .map((d) => d.getModuleSpecifier())
       .filter(isNotUndefined),
+    ...(extension.endsWith('.proxy.js')
+      ? sourceFile.getExportAssignments().flatMap((a) => a.getDescendantsOfKind(SyntaxKind.StringLiteral))
+      : []),
   ]
 
   return pipe(

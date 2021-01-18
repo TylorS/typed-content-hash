@@ -1,5 +1,6 @@
-import { extname } from 'path'
 import resolve from 'resolve'
+
+import { getFileExtension } from './getFileExtension'
 
 const moduleDirectory = ['node_modules', '@types']
 
@@ -23,7 +24,7 @@ export function resolvePackage(options: ResolvePackageOptions) {
 const packageIterator = (request: string, _: string, defaultCanditates: () => string[]): string[] => {
   try {
     const defaults = defaultCanditates()
-    const ext = extname(request)
+    const ext = getFileExtension(request)
 
     if (defaults.includes(ext)) {
       return defaults

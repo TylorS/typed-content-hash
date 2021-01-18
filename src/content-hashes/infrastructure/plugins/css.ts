@@ -32,16 +32,15 @@ export function createCssPlugin(): HashPlugin {
 
         yield* debug(`${yellow(`[CSS]`)} Reading ${filePath}...`)
         const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
-        const withFileExtension: Document = { ...initial, fileExtension: ext }
 
         // Map files should just get setup with appropriate hashes
         if (ext === sourceMapExt) {
-          return some(getHashFor(withFileExtension, '.css'))
+          return some(getHashFor(initial, '.css'))
         }
 
         yield* debug(`${yellow(`[CSS]`)} Finding dependencies ${filePath}...`)
 
-        return some(findDependencies(withFileExtension))
+        return some(findDependencies(initial))
       }),
   }
 

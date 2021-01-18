@@ -104,18 +104,15 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
         const shouldUseHashFor = multiSeparatedExtensions.some((se) => ext.endsWith(se))
 
         yield* debug(`${yellow(`[JS]`)} Reading ${filePath}...`)
-        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
-        const withFileExtension: Document = { ...initial, fileExtension: ext }
-        yield* debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`)
-        const document = yield* findDependencies(
-          project,
-          pathsResolver,
-          shouldUseHashFor
-            ? getHashFor(withFileExtension, ext.endsWith('.proxy.js') ? getProxyReplacementExt(ext) : '.js')
-            : withFileExtension,
-        )
 
-        return some(document)
+        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
+        const document = shouldUseHashFor
+          ? getHashFor(initial, ext.endsWith('.proxy.js') ? getProxyReplacementExt(ext) : '.js')
+          : initial
+
+        yield* debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`)
+
+        return some(yield* findDependencies(project, pathsResolver, document))
       }),
   }
 

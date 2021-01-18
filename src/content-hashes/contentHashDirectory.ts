@@ -57,7 +57,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     hashLength = DEFAULT_HASH_LENGTH,
     assetManifest = DEFAULT_ASSET_MANIFEST,
     baseUrl,
-    registryFile,
+    registryFile = logLevel === LogLevel.Debug ? '_document_registry.json' : undefined,
   } = options
 
   const readFilePath = createReadFilePath(plugins)

@@ -4,7 +4,7 @@ import { eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
 import { isSome, none, Option, some } from 'fp-ts/lib/Option'
 import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
-import { dirname, extname } from 'path'
+import { dirname } from 'path'
 import { CompilerOptions, Project } from 'ts-morph'
 import { red, yellow } from 'typed-colors'
 import { getDefaultCompilerOptions } from 'typescript'
@@ -15,6 +15,7 @@ import { dependencyEq } from '../dependencyEq'
 import { fsReadFile } from '../fsReadFile'
 import { getHashFor } from '../hashes/getHashFor'
 import { HashPlugin } from '../HashPlugin'
+import { getFileExtension } from './getFileExtension'
 import { resolvePathFromSourceFile } from './resolvePathFromSourceFile'
 import { createResolveTsConfigPaths, TsConfigPathsResolver } from './resolveTsConfigPaths'
 
@@ -35,19 +36,9 @@ export type JavascriptPluginOptions = {
   readonly compilerOptions?: CompilerOptions
 }
 
-const multiSeparatedExtensions = ['.js.map.proxy.js', '.d.ts.map', '.js.map', '.d.ts']
+const multiSeparatedExtensions = ['.proxy.js', '.d.ts.map', '.js.map', '.d.ts']
 const simpleExtensions = ['.js', '.ts', '.jsx', '.tsx']
 const supportedExtensions = [...multiSeparatedExtensions, ...simpleExtensions]
-
-const getFileExtension = (filePath: string) => {
-  for (const extension of multiSeparatedExtensions) {
-    if (filePath.endsWith(extension)) {
-      return extension
-    }
-  }
-
-  return extname(filePath)
-}
 
 const quotes = [`'`, `"`]
 
@@ -68,7 +59,6 @@ const stripPostfix = (s: string) => {
 const EXTENSIONLESS_EXTENSIONS: Record<string, readonly string[]> = {
   '.js': ['.js', '.jsx'],
   '.jsx': ['.jsx', '.js'],
-  '.js.map.proxy.js': ['.js.map.proxy.js', '.js.map', '.js'],
   '.d.ts': ['.d.ts', '.ts', '.js'],
 }
 
@@ -78,6 +68,16 @@ const getExtensions = (extension: string) => {
   }
 
   return [extension]
+}
+
+const getProxyReplacementExt = (ext: string): string => {
+  const base = ext.slice(0, -9)
+
+  if (base.endsWith('.map')) {
+    return base.slice(0, -4)
+  }
+
+  return base
 }
 
 export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPlugin => {
@@ -95,13 +95,13 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
       doEffect(function* () {
         const ext = getFileExtension(filePath)
 
-        if (!supportedExtensions.includes(ext)) {
+        if (!supportedExtensions.some((se) => ext.endsWith(se))) {
           yield* debug(`${red(`[JS]`)} Unsupported file extension ${filePath}`)
 
           return none
         }
 
-        const shouldUseHashFor = multiSeparatedExtensions.includes(ext)
+        const shouldUseHashFor = multiSeparatedExtensions.some((se) => ext.endsWith(se))
 
         yield* debug(`${yellow(`[JS]`)} Reading ${filePath}...`)
         const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
@@ -110,7 +110,9 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
         const document = yield* findDependencies(
           project,
           pathsResolver,
-          shouldUseHashFor ? getHashFor(withFileExtension, '.js') : withFileExtension,
+          shouldUseHashFor
+            ? getHashFor(withFileExtension, ext.endsWith('.proxy.js') ? getProxyReplacementExt(ext) : '.js')
+            : withFileExtension,
         )
 
         return some(document)

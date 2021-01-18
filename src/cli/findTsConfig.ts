@@ -1,6 +1,7 @@
 import { none, Option, some } from 'fp-ts/lib/Option'
 import * as fs from 'fs'
-import { basename, dirname, join, resolve } from 'path'
+import { basename, dirname, resolve } from 'path'
+import { sync as nodeResolve } from 'resolve'
 import {
   CompilerOptions,
   convertCompilerOptionsFromJson,
@@ -47,7 +48,7 @@ export function findTsConfig({
 
   if (baseConfig.extends) {
     const extensions = Array.isArray(baseConfig.extends) ? baseConfig.extends : [baseConfig.extends]
-    const extendedConfigPaths = extensions.map((ext) => join(dirname(configPath), ext))
+    const extendedConfigPaths = extensions.map((ext) => nodeResolve(ext, { basedir: dirname(configPath) }))
     const extendedConfigs = extendedConfigPaths.map((path) => parseConfigFile(directory, path, formatHost))
 
     return some(extendedConfigs.reduceRight(mergeConfigs, baseConfig))

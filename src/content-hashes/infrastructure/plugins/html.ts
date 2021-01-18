@@ -1,5 +1,5 @@
 import { doEffect } from '@typed/fp'
-import { none, some } from 'fp-ts/lib/Option'
+import { isSome, none, Option, some } from 'fp-ts/lib/Option'
 import { getMonoid } from 'fp-ts/lib/ReadonlyArray'
 import { foldMap, Tree } from 'fp-ts/lib/Tree'
 import { dirname, extname, relative, resolve } from 'path'
@@ -141,6 +141,8 @@ function isValidDependency(buildDirectory: string, directory: string, contents: 
     return ast.attributes
       .filter(({ key }) => attributesToSearch.includes(key))
       .map(getDependency(buildDirectory, directory, contents, ast))
+      .filter(isSome)
+      .map((o) => o.value)
   }
 }
 
@@ -150,23 +152,34 @@ function getDependency(buildDirectory: string, directory: string, contents: stri
   const astEnd = position.end.index
   const sourceString = contents.slice(astStart, astEnd)
 
-  return (attr: HtmlAttribute): Dependency => {
+  return (attr: HtmlAttribute): Option<Dependency> => {
     const start = findSourceIndex(sourceString, attr)
     const end = start + attr.value.length
     const relativeSpecifier = ensureRelativeSpecifier(attr.value, buildDirectory, directory)
-    const filePath = resolvePackage({ moduleSpecifier: relativeSpecifier, directory, extensions: ['.js'] })
+    const hasFileExtension = extname(relativeSpecifier) !== ''
 
-    const dep: Dependency = {
-      specifier: attr.value,
-      filePath: filePath,
-      fileExtension: extname(filePath),
-      position: {
-        start: start + astStart,
-        end: end + astStart,
-      },
+    try {
+      const filePath = resolvePackage({ moduleSpecifier: relativeSpecifier, directory, extensions: ['.js'] })
+
+      const dep: Dependency = {
+        specifier: attr.value,
+        filePath: filePath,
+        fileExtension: extname(filePath),
+        position: {
+          start: start + astStart,
+          end: end + astStart,
+        },
+      }
+
+      return some(dep)
+    } catch (error) {
+      // If we're really sure it is supposed to be a file, throw the error
+      if (hasFileExtension) {
+        throw error
+      }
+
+      return none
     }
-
-    return dep
   }
 }
 

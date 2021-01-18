@@ -22,6 +22,19 @@ import { LogLevel } from './services'
 const testDirectory = join(__dirname, '../../../test')
 
 const expected = {
+  'foo.d.ts': {
+    filePath: 'foo.d.ts',
+    fileExtension: '.d.ts',
+    contents:
+      "export declare const foo: () => 'foo'\n//# sourceMappingURL=foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg.d.ts\n",
+    contentHash: some({
+      type: 'hashFor',
+      filePath: 'foo.js',
+    }),
+    dependencies: [],
+    sourceMap: some('foo.d.ts.map'),
+    isBase64Encoded: false,
+  },
   'foo.js': {
     filePath: 'foo.js',
     fileExtension: '.js',
@@ -29,24 +42,20 @@ const expected = {
       "export const foo = () => 'foo'\n//# sourceMappingURL=foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg.js\n",
     contentHash: some({
       type: 'hash',
-      hash: 'kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg',
+      hash: '9oJ8wwurnXXZEx6AlpmUvWM_EUjWO4Lontbgqu8VN1UeHCkFh575pmJopyjqLLtip4GXK7z8NeazAoCiuRWlkg',
     }),
     dependencies: [],
     sourceMap: some('foo.js.map'),
     isBase64Encoded: false,
-    hash: {
-      type: 'hash',
-      hash: '9oJ8wwurnXXZEx6AlpmUvWM_EUjWO4Lontbgqu8VN1UeHCkFh575pmJopyjqLLtip4GXK7z8NeazAoCiuRWlkg',
-    },
   },
   'index.css': {
     filePath: 'index.css',
     fileExtension: '.css',
     contents:
-      '.foo {\n  background-attachment: url(./test.SqTwlyhFaQu3dLbn19MVS9jrp91n34OyLW63Tz8YiaMhi3dSpANixMKC0uz-scQnXZO1dsrsuiZdc8kVKhh-Pw.svg);\n}\n/*# sourceMappingURL=index._mi7T5MEesaq-PmkaxwZW6xWIS5Twut_7MYMXRVoDmwBBU6JJ19hukQ99D-1DAWFHwlELgjLCy_YMtl1peB7Pw.css *\n',
+      '.foo {\n  background-attachment: url(./test.SqTwlyhFaQu3dLbn19MVS9jrp91n34OyLW63Tz8YiaMhi3dSpANixMKC0uz-scQnXZO1dsrsuiZdc8kVKhh-Pw.svg);\n}\n/*# sourceMappingURL=index.lL-qU55pL5nMl5jIaKYR_5WVrlm6cqByE4ZXWGXVsebBxH3vLz4lq-TROR0_T3WS7XuqpzU7IY2HEHlT-ywc6A.css *\n',
     contentHash: some({
       type: 'hash',
-      hash: '_mi7T5MEesaq-PmkaxwZW6xWIS5Twut_7MYMXRVoDmwBBU6JJ19hukQ99D-1DAWFHwlELgjLCy_YMtl1peB7Pw',
+      hash: 'Q4y065v6-Ee2p_kku0ILeXfMp9JSPVDoMNhxci2833AZBN0_0GOdstFfY_LEO8WLBAGocMiKyPdyPYa2waatSg',
     }),
     dependencies: [
       {
@@ -55,27 +64,46 @@ const expected = {
           start: 36,
           end: 46,
         },
-        filePath: '/Users/TylorSteinberger/code/tylors/typed-content-hash/test/test.svg',
+        filePath: 'test.svg',
         fileExtension: '.svg',
       },
     ],
     sourceMap: some('index.css.map'),
     isBase64Encoded: false,
-    hash: {
-      type: 'hash',
-      hash: 'tvRsYdt6MrRal8_9TNM-0O4PRUX5P6c6Rky-PXJvDEvJ962m7CLI_WWr-AlYjNwAGiVwUuCov6Qza6lxDjLPNg',
-    },
+  },
+  'index.d.ts': {
+    filePath: 'index.d.ts',
+    fileExtension: '.d.ts',
+    contents:
+      "import { foo } from './foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg'\n\nexport declare function bar(): `${ReturnType<typeof foo>}bar`\n//# sourceMappingURL=index.BVnUKweCDXC-nBohT116nf-qOZk29lkIba_o5x93UNQqCDNWjsm2WCT9ELiO6x_-jNVWc_Pwxxbh1jLwTRFqTg.d.ts\n",
+    contentHash: some({
+      type: 'hashFor',
+      filePath: 'index.js',
+    }),
+    dependencies: [
+      {
+        specifier: './foo',
+        filePath: 'foo.d.ts',
+        fileExtension: '.d.ts',
+        position: {
+          start: 21,
+          end: 26,
+        },
+      },
+    ],
+    sourceMap: some('index.d.ts.map'),
+    isBase64Encoded: false,
   },
   'index.html': {
     filePath: 'index.html',
     fileExtension: '.html',
     contents:
-      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <link href="./index._mi7T5MEesaq-PmkaxwZW6xWIS5Twut_7MYMXRVoDmwBBU6JJ19hukQ99D-1DAWFHwlELgjLCy_YMtl1peB7Pw.css" />\n</head>\n\n<body>\n  <div id="app"></div>\n\n  <script type="module" src="./index.2ufQOphc1z8bbjgoVmOupOqtDJc52l9oJ-w4gj7wAtfOqmJIl-cF-enkFkpYUAbrittPZ1SmWcLshnhvcTYLSA.js"></script>\n</body>\n\n</html>\n',
+      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <link href="./index.lL-qU55pL5nMl5jIaKYR_5WVrlm6cqByE4ZXWGXVsebBxH3vLz4lq-TROR0_T3WS7XuqpzU7IY2HEHlT-ywc6A.css" />\n</head>\n\n<body>\n  <div id="app"></div>\n\n  <script type="module" src="./index.BVnUKweCDXC-nBohT116nf-qOZk29lkIba_o5x93UNQqCDNWjsm2WCT9ELiO6x_-jNVWc_Pwxxbh1jLwTRFqTg.js"></script>\n</body>\n\n</html>\n',
     contentHash: none,
     dependencies: [
       {
         specifier: './index.css',
-        filePath: '/Users/TylorSteinberger/code/tylors/typed-content-hash/test/index.css',
+        filePath: 'index.css',
         fileExtension: '.css',
         position: {
           start: 69,
@@ -84,7 +112,7 @@ const expected = {
       },
       {
         specifier: './index.js',
-        filePath: '/Users/TylorSteinberger/code/tylors/typed-content-hash/test/index.js',
+        filePath: 'index.js',
         fileExtension: '.js',
         position: {
           start: 154,
@@ -99,15 +127,15 @@ const expected = {
     filePath: 'index.js',
     fileExtension: '.js',
     contents:
-      "import { foo } from './foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg.js'\n\n// eslint-disable-next-line no-undef\nconsole.log(foo())\n\n//# sourceMappingURL=index.2ufQOphc1z8bbjgoVmOupOqtDJc52l9oJ-w4gj7wAtfOqmJIl-cF-enkFkpYUAbrittPZ1SmWcLshnhvcTYLSA.js\n",
+      "import { foo } from './foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg.js'\n\nexport function bar() {\n  return foo() + 'bar'\n}\n//# sourceMappingURL=index.BVnUKweCDXC-nBohT116nf-qOZk29lkIba_o5x93UNQqCDNWjsm2WCT9ELiO6x_-jNVWc_Pwxxbh1jLwTRFqTg.js\n",
     contentHash: some({
       type: 'hash',
-      hash: '2ufQOphc1z8bbjgoVmOupOqtDJc52l9oJ-w4gj7wAtfOqmJIl-cF-enkFkpYUAbrittPZ1SmWcLshnhvcTYLSA',
+      hash: 'JoRINSAmZB2nzmIQGHcPOqVEFYVcxhi1GthT_BVlVXhP7JQBIfyZgypj8CPDFGZCaQ0VXdpx2XW5_lfZWvuU0w',
     }),
     dependencies: [
       {
         specifier: './foo.js',
-        filePath: '/Users/TylorSteinberger/code/tylors/typed-content-hash/test/foo.js',
+        filePath: 'foo.js',
         fileExtension: '.js',
         position: {
           start: 21,
@@ -117,10 +145,6 @@ const expected = {
     ],
     sourceMap: some('index.js.map'),
     isBase64Encoded: false,
-    hash: {
-      type: 'hash',
-      hash: 'w6kiakJ6cwWmPdNjybrNNgGLN-2nx8h1Efqb54a2H97x6QP2BdMBYif91M52iKw1H__H3yd91ltWf7_BhZNv4g',
-    },
   },
   'test.svg': {
     filePath: 'test.svg',
@@ -152,7 +176,7 @@ const expected = {
     filePath: 'index.js.map',
     fileExtension: '.js.map',
     contents:
-      '{\n  "version": 3,\n  "file": "index.js",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAQ,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACpC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAClB;",\n  "names": [],\n  "sources": [\n    "import%20%7B%20foo%20%7D%20from%20\'./foo.js\'//%20eslint-disable-next-line%20no-undefconsole.log(foo())"\n  ],\n  "sourcesContent": [\n    "import { foo } from \'./foo.js\'\\n\\n// eslint-disable-next-line no-undef\\nconsole.log(foo())\\n\\n"\n  ]\n}',
+      '{\n  "version": 3,\n  "file": "index.js",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAQ,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACvB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACtB,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20%7B%20foo%20%7D%20from%20\'./foo.js\'export%20function%20bar()%20%7B%20%20return%20foo()%20+%20\'bar\'%7D"\n  ],\n  "sourcesContent": [\n    "import { foo } from \'./foo.js\'\\n\\nexport function bar() {\\n  return foo() + \'bar\'\\n}\\n"\n  ]\n}',
     contentHash: some({
       type: 'hashFor',
       filePath: 'index.js',
@@ -169,6 +193,32 @@ const expected = {
     contentHash: some({
       type: 'hashFor',
       filePath: 'index.css',
+    }),
+    dependencies: [],
+    sourceMap: none,
+    isBase64Encoded: false,
+  },
+  'foo.d.ts.map': {
+    filePath: 'foo.d.ts.map',
+    fileExtension: '.d.ts.map',
+    contents:
+      '{\n  "version": 3,\n  "file": "foo.d.ts",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;",\n  "names": [],\n  "sources": [\n    "export%20declare%20const%20foo:%20()%20=%3E%20\'foo\'"\n  ],\n  "sourcesContent": [\n    "export declare const foo: () => \'foo\'\\n"\n  ]\n}',
+    contentHash: some({
+      type: 'hashFor',
+      filePath: 'foo.d.ts',
+    }),
+    dependencies: [],
+    sourceMap: none,
+    isBase64Encoded: false,
+  },
+  'index.d.ts.map': {
+    filePath: 'index.d.ts.map',
+    fileExtension: '.d.ts.map',
+    contents:
+      '{\n  "version": 3,\n  "file": "index.d.ts",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAA,CAAK,CAAC;AAC3B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20%7B%20foo%20%7D%20from%20\'./foo\'export%20declare%20function%20bar():%20%60$%7BReturnType%3Ctypeof%20foo%3E%7Dbar%60"\n  ],\n  "sourcesContent": [\n    "import { foo } from \'./foo\'\\n\\nexport declare function bar(): `${ReturnType<typeof foo>}bar`\\n"\n  ]\n}',
+    contentHash: some({
+      type: 'hashFor',
+      filePath: 'index.d.ts',
     }),
     dependencies: [],
     sourceMap: none,
@@ -232,6 +282,7 @@ function normalizeRegistry(directory: string, registry: Record<string, Document>
 function normalizeDoc(directory: string, document: Document): Document {
   return {
     ...document,
+    dependencies: document.dependencies.map((d) => ({ ...d, filePath: relative(directory, d.filePath) })),
     filePath: relative(directory, document.filePath),
     sourceMap: pipe(
       document.sourceMap,

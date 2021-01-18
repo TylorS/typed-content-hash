@@ -6,7 +6,7 @@ import MagicString from 'magic-string'
 import { basename, extname } from 'path'
 
 import { DocumentRegistryEnv } from '../application/model'
-import { Document } from '../domain/model'
+import { Document, DocumentHash } from '../domain/model'
 import { sha512Hash } from './sha512Hash'
 
 const sourceMapExt = '.map'
@@ -18,7 +18,9 @@ const rewriteContentHash = (document: Document) =>
       () => document,
       (hash) => ({
         ...document,
-        hash: hash.type === 'hash' ? { type: 'hash', hash: sha512Hash(document.contents) } : hash,
+        contentHash: some(
+          hash.type === 'hash' ? ({ type: 'hash', hash: sha512Hash(document.contents) } as DocumentHash) : hash,
+        ),
       }),
     ),
   )

@@ -1,5 +1,5 @@
 import { foo } from './foo.js'
 
-// eslint-disable-next-line no-undef
-console.log(foo())
-
+export function bar() {
+  return foo() + 'bar'
+}

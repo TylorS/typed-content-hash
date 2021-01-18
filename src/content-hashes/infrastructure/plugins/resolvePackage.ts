@@ -30,7 +30,7 @@ const packageIterator = (request: string, _: string, defaultCanditates: () => st
     }
 
     // Attempt to add the current extension to those being looked up
-    return [ext, ...defaultCanditates()]
+    return [...defaultCanditates(), ext]
   } catch {
     return defaultCanditates()
   }

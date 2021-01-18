@@ -42,7 +42,7 @@ const expected = {
       "export const foo = () => 'foo'\n//# sourceMappingURL=foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg.js\n",
     contentHash: some({
       type: 'hash',
-      hash: '9oJ8wwurnXXZEx6AlpmUvWM_EUjWO4Lontbgqu8VN1UeHCkFh575pmJopyjqLLtip4GXK7z8NeazAoCiuRWlkg',
+      hash: 'kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg',
     }),
     dependencies: [],
     sourceMap: some('foo.js.map'),
@@ -55,7 +55,7 @@ const expected = {
       '.foo {\n  background-attachment: url(./test.SqTwlyhFaQu3dLbn19MVS9jrp91n34OyLW63Tz8YiaMhi3dSpANixMKC0uz-scQnXZO1dsrsuiZdc8kVKhh-Pw.svg);\n}\n/*# sourceMappingURL=index.lL-qU55pL5nMl5jIaKYR_5WVrlm6cqByE4ZXWGXVsebBxH3vLz4lq-TROR0_T3WS7XuqpzU7IY2HEHlT-ywc6A.css *\n',
     contentHash: some({
       type: 'hash',
-      hash: 'Q4y065v6-Ee2p_kku0ILeXfMp9JSPVDoMNhxci2833AZBN0_0GOdstFfY_LEO8WLBAGocMiKyPdyPYa2waatSg',
+      hash: 'lL-qU55pL5nMl5jIaKYR_5WVrlm6cqByE4ZXWGXVsebBxH3vLz4lq-TROR0_T3WS7XuqpzU7IY2HEHlT-ywc6A',
     }),
     dependencies: [
       {
@@ -130,7 +130,7 @@ const expected = {
       "import { foo } from './foo.kyDx8gRaCgRSqofIkYsPrUHeGxIjORf93KcJDxgv4sN3HCVd9brbzDRYzcQvB_etbBlo-3dZZnjcpP4dhoJGeg.js'\n\nexport function bar() {\n  return foo() + 'bar'\n}\n//# sourceMappingURL=index.BVnUKweCDXC-nBohT116nf-qOZk29lkIba_o5x93UNQqCDNWjsm2WCT9ELiO6x_-jNVWc_Pwxxbh1jLwTRFqTg.js\n",
     contentHash: some({
       type: 'hash',
-      hash: 'JoRINSAmZB2nzmIQGHcPOqVEFYVcxhi1GthT_BVlVXhP7JQBIfyZgypj8CPDFGZCaQ0VXdpx2XW5_lfZWvuU0w',
+      hash: 'BVnUKweCDXC-nBohT116nf-qOZk29lkIba_o5x93UNQqCDNWjsm2WCT9ELiO6x_-jNVWc_Pwxxbh1jLwTRFqTg',
     }),
     dependencies: [
       {

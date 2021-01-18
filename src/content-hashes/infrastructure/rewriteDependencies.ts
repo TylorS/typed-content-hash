@@ -49,10 +49,23 @@ const rewriteDocumentDependencies = (
     if (depDoc) {
       const hashedPath = getHashedPath(depDoc, registry, hashLength)
       const relativePath = ensureRelative(relative(dirname(document.filePath), hashedPath))
-      const pathToUse = baseUrl ? applyOrigin(directory, dep.filePath, baseUrl) : relativePath
-      const replacementPath = dtsRegex.test(relativePath) ? relativePath.replace(dtsRegex, '') : pathToUse
+      const absolutePath = ensureAbsolute(relative(directory, hashedPath))
+      const pathToUse = baseUrl
+        ? applyOrigin(directory, dep.filePath, baseUrl)
+        : dep.specifier.startsWith('/')
+        ? absolutePath
+        : relativePath
+      const replacementPath = dtsRegex.test(pathToUse) ? pathToUse.replace(dtsRegex, '') : pathToUse
 
       ms.overwrite(dep.position.start, dep.position.end, replacementPath)
     }
   }
+}
+
+function ensureAbsolute(path: string) {
+  if (path[0] !== '/') {
+    return '/' + path
+  }
+
+  return path
 }

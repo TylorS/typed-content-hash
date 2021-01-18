@@ -4,7 +4,7 @@ import { eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
 import { isSome, none, Option, some } from 'fp-ts/lib/Option'
 import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
-import { dirname } from 'path'
+import { basename, dirname } from 'path'
 import { CompilerOptions, Project } from 'ts-morph'
 import { red, yellow } from 'typed-colors'
 import { getDefaultCompilerOptions, SyntaxKind } from 'typescript'
@@ -12,6 +12,7 @@ import { getDefaultCompilerOptions, SyntaxKind } from 'typescript'
 import { debug } from '../../application/services/logging'
 import { Dependency, Document } from '../../domain/model'
 import { dependencyEq } from '../dependencyEq'
+import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { getHashFor } from '../hashes/getHashFor'
 import { HashPlugin } from '../HashPlugin'
@@ -102,12 +103,13 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
         }
 
         const shouldUseHashFor = multiSeparatedExtensions.some((se) => ext.endsWith(se))
+        const isProxyJs = ext.endsWith('.proxy.js')
 
         yield* debug(`${yellow(`[JS]`)} Reading ${filePath}...`)
 
-        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
+        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: !isProxyJs, isBase64Encoded: false })
         const document = shouldUseHashFor
-          ? getHashFor(initial, ext.endsWith('.proxy.js') ? getProxyReplacementExt(ext) : '.js')
+          ? getHashFor(initial, isProxyJs ? getProxyReplacementExt(ext) : '.js')
           : initial
 
         yield* debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`)
@@ -126,28 +128,37 @@ function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver
   const sourceFilePath = sourceFile.getFilePath()
   const extension = getFileExtension(sourceFilePath)
 
-  const stringLiterals = [
+  const standardStringLiterals = [
     ...sourceFile.getImportStringLiterals(),
     ...sourceFile
       .getExportDeclarations()
       .map((d) => d.getModuleSpecifier())
       .filter(isNotUndefined),
+  ]
+
+  const absoluteStringLiterals = [
     ...(extension.endsWith('.proxy.js')
       ? sourceFile.getExportAssignments().flatMap((a) => a.getDescendantsOfKind(SyntaxKind.StringLiteral))
       : []),
   ]
 
-  return pipe(
-    stringLiterals.map((literal) => {
-      const specifier = stripSpecifier(literal.getText())
+  const stringLiterals = [
+    ...standardStringLiterals.map((s) => [s, false] as const),
+    ...absoluteStringLiterals.map((s) => [s, true] as const),
+  ]
 
-      if (specifiersToSkip.includes(specifier)) {
+  return pipe(
+    stringLiterals.map(([literal, useBaseName]) => {
+      const specifier = stripSpecifier(literal.getText())
+      const moduleSpecifier = useBaseName ? ensureRelative(basename(specifier)) : specifier
+
+      if (specifiersToSkip.includes(moduleSpecifier)) {
         return Pure.of(none)
       }
 
       return pipe(
         resolvePath({
-          moduleSpecifier: specifier,
+          moduleSpecifier,
           directory: dirname(sourceFilePath),
           pathsResolver,
           extensions: getExtensions(extension),

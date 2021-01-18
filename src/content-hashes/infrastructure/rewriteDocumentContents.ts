@@ -1,15 +1,17 @@
 import remapping from '@ampproject/remapping'
 import { ask, doEffect } from '@typed/fp'
-import { pipe } from 'fp-ts/lib/function'
+import { identity, pipe } from 'fp-ts/lib/function'
 import { fold, isNone, none, some } from 'fp-ts/lib/Option'
 import MagicString from 'magic-string'
-import { basename, extname } from 'path'
+import { basename } from 'path'
 
 import { DocumentRegistryEnv } from '../application/model'
 import { Document, DocumentHash } from '../domain/model'
+import { getFileExtension } from './plugins/getFileExtension'
 import { sha512Hash } from './sha512Hash'
 
 const sourceMapExt = '.map'
+const proxyJsExt = '.proxy.js'
 
 const rewriteContentHash = (document: Document) =>
   pipe(
@@ -34,17 +36,17 @@ const remapSourceMaps = (current: Document, updated: Document): Document => ({
 export function rewriteDocumentContents(
   document: Document,
   f: (magicString: MagicString) => void,
-  skipSourceMap: boolean,
+  skipHashUpdate: boolean,
 ) {
   return doEffect(function* () {
     const { documentRegistry } = yield* ask<DocumentRegistryEnv>()
 
     const { filePath, contents, sourceMap, isBase64Encoded } = document
     const filename = basename(filePath)
-    const ext = extname(filename)
+    const ext = getFileExtension(filename)
 
     // We don't rewrite source maps or base64 encoded documents
-    if (ext === sourceMapExt || isBase64Encoded) {
+    if (ext.endsWith(sourceMapExt) || isBase64Encoded) {
       return documentRegistry
     }
 
@@ -56,13 +58,16 @@ export function rewriteDocumentContents(
     f(magicString)
 
     const updatedContents = magicString.toString()
-    const updatedDocument: Document = rewriteContentHash({
-      ...document,
-      contents: updatedContents,
-    })
+    const updatedDocument: Document = pipe(
+      {
+        ...document,
+        contents: updatedContents,
+      },
+      skipHashUpdate ? identity : rewriteContentHash,
+    )
     const updatedRegistry = new Map([...documentRegistry, [filePath, updatedDocument]])
 
-    if (skipSourceMap || isNone(sourceMap)) {
+    if (isNone(sourceMap) || ext.endsWith(proxyJsExt)) {
       return updatedRegistry
     }
 

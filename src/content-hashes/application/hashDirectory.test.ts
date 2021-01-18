@@ -1,8 +1,8 @@
 import { doEffect, execPure, log, provideAll, provideSome } from '@typed/fp'
 import { deepStrictEqual } from 'assert'
 import { pipe } from 'fp-ts/lib/function'
-import { map, none, some } from 'fp-ts/lib/Option'
-import { join, relative } from 'path'
+import { none, some } from 'fp-ts/lib/Option'
+import { join } from 'path'
 
 import {
   createReadFilePath,
@@ -14,10 +14,10 @@ import {
   topoSortDocs,
 } from '..'
 import { createDefaultPlugins } from '../defaultPlugins'
-import { Document } from '../domain/model'
-import { DocumentRegistryEnv, LoggerEnv } from '.'
+import { normalizeRegistry } from '../infrastructure/normalizeRegistry'
 import { hashDirectory } from './hashDirectory'
-import { LogLevel } from './services'
+import { DocumentRegistryEnv } from './model'
+import { LoggerEnv, LogLevel } from './services'
 
 const testDirectory = join(__dirname, '../../../test')
 
@@ -230,7 +230,7 @@ describe('hashDirectory', () => {
   it('hashes a directory into a registry', (done) => {
     const test = doEffect(function* () {
       try {
-        const registry = Object.fromEntries(yield* hashDirectory(testDirectory))
+        const registry = yield* hashDirectory(testDirectory)
         const normalizedRegistry = normalizeRegistry(testDirectory, registry)
 
         deepStrictEqual(normalizedRegistry, expected)
@@ -272,25 +272,3 @@ describe('hashDirectory', () => {
     )
   })
 })
-
-function normalizeRegistry(directory: string, registry: Record<string, Document>): Record<string, Document> {
-  return Object.fromEntries(
-    Object.entries(registry).map(([path, doc]) => [relative(directory, path), normalizeDoc(directory, doc)]),
-  )
-}
-
-function normalizeDoc(directory: string, document: Document): Document {
-  return {
-    ...document,
-    dependencies: document.dependencies.map((d) => ({ ...d, filePath: relative(directory, d.filePath) })),
-    filePath: relative(directory, document.filePath),
-    sourceMap: pipe(
-      document.sourceMap,
-      map((p) => relative(directory, p)),
-    ),
-    contentHash: pipe(
-      document.contentHash,
-      map((hash) => (hash.type === 'hashFor' ? { ...hash, filePath: relative(directory, hash.filePath) } : hash)),
-    ),
-  }
-}

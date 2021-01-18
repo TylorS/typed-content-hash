@@ -26,6 +26,8 @@ import {
   rewriteSourceMapUrls,
   topoSortDocs,
 } from './infrastructure'
+import { normalizeRegistry } from './infrastructure/normalizeRegistry'
+import { getFileExtension } from './infrastructure/plugins/getFileExtension'
 
 export type ContentHashOptions = {
   readonly directory: string
@@ -37,6 +39,7 @@ export type ContentHashOptions = {
   readonly documentRegistry?: DocumentRegistry
   readonly logLevel?: LogLevel
   readonly logPrefix?: string
+  readonly registryFile?: string // Path to registry output
 }
 
 const DEFAULT_LOG_LEVEL = LogLevel.Error
@@ -54,6 +57,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     hashLength = DEFAULT_HASH_LENGTH,
     assetManifest = DEFAULT_ASSET_MANIFEST,
     baseUrl,
+    registryFile,
   } = options
 
   const readFilePath = createReadFilePath(plugins)
@@ -63,17 +67,33 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
   const program = doEffect(function* () {
     const registry = yield* hashDirectory(directory)
     const assetManifiestJson = yield* generateAssetManifest(registry)
+    const filePath = resolve(directory, assetManifest)
     const assetManifiestDoc: Document = {
-      filePath: resolve(directory, assetManifest),
-      fileExtension: '.json',
+      filePath: filePath,
+      fileExtension: getFileExtension(filePath),
       contents: JSON.stringify(assetManifiestJson, null, 2),
       contentHash: none,
       sourceMap: none,
       isBase64Encoded: false,
       dependencies: [],
     }
+    const toWrite = new Map([...registry, [assetManifiestDoc.filePath, assetManifiestDoc]])
 
-    yield* writeDocuments(new Map([...registry, [assetManifiestDoc.filePath, assetManifiestDoc]]))
+    if (registryFile) {
+      const filePath = resolve(directory, registryFile)
+
+      toWrite.set(filePath, {
+        filePath,
+        fileExtension: getFileExtension(filePath),
+        contents: JSON.stringify(normalizeRegistry(directory, registry), null, 2),
+        contentHash: none,
+        sourceMap: none,
+        dependencies: [],
+        isBase64Encoded: false,
+      })
+    }
+
+    yield* writeDocuments(toWrite)
 
     return registry
   })

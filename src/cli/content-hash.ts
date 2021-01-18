@@ -41,6 +41,10 @@ const options = yargs
     choices: ['debug', 'info', 'error'] as const,
     default: 'info',
   })
+  .options('registryFile', {
+    type: 'string',
+    description: 'Configure where to write Document Registry to JSON. Useful for debugging',
+  })
   .help().argv
 
 function getLogLevel(option: string) {
@@ -76,6 +80,7 @@ contentHashDirectory({
     ),
   }),
   logLevel: getLogLevel(options.logLevel),
+  registryFile: options.registryFile,
 }).catch((error) => {
   console.error(error)
 

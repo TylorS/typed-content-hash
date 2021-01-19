@@ -258,13 +258,14 @@ describe('hashDirectory', () => {
         readDirectory: fsReadDirectory,
         readDependencies: fsReadDependencies,
         toposortDocuments: topoSortDocs,
-        rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength),
+        rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength, true),
         rewriteDependencies: (doc) =>
           pipe(
             rewriteDependencies(doc),
             provideSome<RewriteDependenciesImplementationEnv>({
               hashLength,
               directory: testDirectory,
+              sourceMaps: true,
             }),
           ),
       }),

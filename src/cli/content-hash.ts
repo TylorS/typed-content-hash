@@ -45,6 +45,10 @@ const options = yargs
     type: 'string',
     description: 'Configure where to write Document Registry to JSON. Useful for debugging',
   })
+  .options('sourceMaps', {
+    type: 'boolean',
+    default: true,
+  })
   .help().argv
 
 function getLogLevel(option: string) {
@@ -81,6 +85,7 @@ contentHashDirectory({
   }),
   logLevel: getLogLevel(options.logLevel),
   registryFile: options.registryFile,
+  sourceMaps: options.sourceMaps,
 }).catch((error) => {
   console.error(error)
 

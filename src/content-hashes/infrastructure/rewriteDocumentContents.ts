@@ -36,6 +36,7 @@ const remapSourceMaps = (current: Document, updated: Document): Document => ({
 export function rewriteDocumentContents(
   document: Document,
   f: (magicString: MagicString) => void,
+  sourceMaps: boolean,
   skipHashUpdate: boolean,
 ) {
   return doEffect(function* () {
@@ -67,7 +68,7 @@ export function rewriteDocumentContents(
     )
     const updatedRegistry = new Map([...documentRegistry, [filePath, updatedDocument]])
 
-    if (isNone(sourceMap) || ext.endsWith(proxyJsExt)) {
+    if (!sourceMaps || isNone(sourceMap) || ext.endsWith(proxyJsExt)) {
       return updatedRegistry
     }
 

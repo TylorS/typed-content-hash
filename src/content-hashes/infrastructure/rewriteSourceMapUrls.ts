@@ -8,7 +8,10 @@ import { getHashedPath } from './hashes/getHashedPath'
 import { rewriteDocumentContents } from './rewriteDocumentContents'
 import { rewriteSourceMapUrl } from './rewriteSourceMapUrl'
 
-export const rewriteSourceMapUrls = (hashLength: number): Effect<DocumentRegistryEnv & LoggerEnv, DocumentRegistry> =>
+export const rewriteSourceMapUrls = (
+  hashLength: number,
+  sourceMaps: boolean,
+): Effect<DocumentRegistryEnv & LoggerEnv, DocumentRegistry> =>
   doEffect(function* () {
     yield* debug(`Rewriting source-map URLs...`)
 
@@ -22,6 +25,7 @@ export const rewriteSourceMapUrls = (hashLength: number): Effect<DocumentRegistr
           rewriteDocumentContents(
             document,
             (ms) => rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
+            sourceMaps,
             true,
           ),
           useSome<DocumentRegistryEnv>({ documentRegistry }),

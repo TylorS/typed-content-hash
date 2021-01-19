@@ -16,6 +16,7 @@ const dtsRegex = new RegExp(`.d.ts$`)
 export type RewriteDependenciesImplementationEnv = {
   readonly directory: string
   readonly hashLength: number
+  readonly sourceMaps: boolean
   readonly baseUrl?: string
 }
 
@@ -31,6 +32,7 @@ export const rewriteDependencies = (
       rewriteDocumentContents(
         document,
         rewriteDocumentDependencies(document, env.documentRegistry, env.directory, env.hashLength, env.baseUrl),
+        env.sourceMaps,
         false,
       ),
     )

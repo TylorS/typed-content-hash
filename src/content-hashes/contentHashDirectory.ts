@@ -1,6 +1,6 @@
 import { doEffect, log, provideAll, provideSome, toPromise } from '@typed/fp'
 import { pipe } from 'fp-ts/lib/function'
-import { none } from 'fp-ts/lib/Option'
+import { isNone, isSome, none, Option, some } from 'fp-ts/lib/Option'
 import { resolve } from 'path'
 import { gray } from 'typed-colors'
 
@@ -40,6 +40,7 @@ export type ContentHashOptions = {
   readonly logLevel?: LogLevel
   readonly logPrefix?: string
   readonly registryFile?: string // Path to registry output
+  readonly sourceMaps?: boolean
 }
 
 const DEFAULT_LOG_LEVEL = LogLevel.Error
@@ -58,6 +59,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     assetManifest = DEFAULT_ASSET_MANIFEST,
     baseUrl,
     registryFile = logLevel === LogLevel.Debug ? '_document_registry.json' : undefined,
+    sourceMaps = true,
   } = options
 
   const readFilePath = createReadFilePath(plugins)
@@ -104,10 +106,31 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
       ...documentRegistryEnv,
       ...loggerEnv,
       readDirectory: fsReadDirectory,
-      readDependencies: fsReadDependencies,
+      readDependencies: (directory, doc) =>
+        doEffect(function* () {
+          const documents = yield* fsReadDependencies(directory, doc)
+
+          if (sourceMaps) {
+            return documents
+          }
+
+          return documents
+            .map(removeSourceMaps)
+            .filter(isSome)
+            .map((o) => o.value)
+        }),
       toposortDocuments: topoSortDocs,
-      readFilePath,
-      rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength),
+      readFilePath: (path) =>
+        doEffect(function* () {
+          const doc = yield* readFilePath(path)
+
+          if (sourceMaps || isNone(doc)) {
+            return doc
+          }
+
+          return removeSourceMaps(doc.value)
+        }),
+      rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength, sourceMaps),
       rewriteDependencies: (doc) =>
         pipe(
           rewriteDependencies(doc),
@@ -115,6 +138,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
             hashLength,
             directory,
             baseUrl,
+            sourceMaps,
           }),
         ),
       generateAssetManifest: (doc) => generateAssetManfiestFromRegistry(directory, doc, hashLength, baseUrl),
@@ -122,4 +146,12 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     }),
     toPromise,
   )
+}
+
+function removeSourceMaps(doc: Document): Option<Document> {
+  if (doc.fileExtension.endsWith('.map')) {
+    return none
+  }
+
+  return some({ ...doc, sourceMap: none })
 }

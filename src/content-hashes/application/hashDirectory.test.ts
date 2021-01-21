@@ -1,7 +1,6 @@
 import { doEffect, execPure, log, provideAll, provideSome } from '@typed/fp'
 import { deepStrictEqual } from 'assert'
 import { pipe } from 'fp-ts/lib/function'
-import { writeFileSync } from 'fs'
 import { join } from 'path'
 
 import {
@@ -400,8 +399,6 @@ describe('hashDirectory', () => {
       try {
         const registry = yield* hashDirectory(testDirectory)
         const normalizedRegistry = normalizeRegistry(testDirectory, registry)
-
-        writeFileSync('registry.json', JSON.stringify(normalizedRegistry, null, 2))
 
         deepStrictEqual(normalizedRegistry, expected)
         done()

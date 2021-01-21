@@ -40,7 +40,6 @@
   "homepage": "https://github.com/TylorS/typed-content-hash#readme",
   "dependencies": {
     "@ampproject/remapping": "^1.0.0",
-    "@rtsao/scc": "^1.0.0",
     "@typed/fp": "0.0.23",
     "base64url": "^3.0.1",
     "builtin-modules": "^3.2.0",

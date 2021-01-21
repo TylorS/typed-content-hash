@@ -9,6 +9,14 @@ export function tarjan<A>(graph: DiGraph<A>): ReadonlyArray<ReadonlyArray<A>> {
 
   let index = 0
 
+  for (const v of graph.keys()) {
+    if (!indices.has(v)) {
+      strongConnect(v)
+    }
+  }
+
+  return stronglyConnectedComponents
+
   function strongConnect(v: A) {
     indices.set(v, index)
     lowlinks.set(v, index++)
@@ -44,12 +52,4 @@ export function tarjan<A>(graph: DiGraph<A>): ReadonlyArray<ReadonlyArray<A>> {
       stronglyConnectedComponents.push(Array.from(vertices))
     }
   }
-
-  for (const v of graph.keys()) {
-    if (!indices.has(v)) {
-      strongConnect(v)
-    }
-  }
-
-  return stronglyConnectedComponents
 }

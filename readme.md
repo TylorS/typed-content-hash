@@ -1,14 +1,14 @@
 # @typed/content-hash
 
-Rewrite a directory of static files with SHA-512 content hashes with first-class support for source maps and generate an asset manifest.
+Rewrite a directory of static files with SHA-512 content hashes, with first-class support for source maps, and generate an asset manifest reflecting the filename changes.
 
 ## Features 
 
 - SHA-512 Content Hashes, with configurable length.
-- [Topological Sort](https://www.npmjs.com/package/toposort)
-  - Ensures long-term caching is safe.
+- Deterministic, content-based hashes.
+  - Supports circular dependencies!
 - [TypeScript API](#API), with a simple plugin API.
-- Generates Asset Manifest as JSON 
+- Generates an Asset Manifest as JSON 
 - Simple CLI
 - [Generates](https://github.com/Rich-Harris/magic-string) and [remaps](https://github.com/ampproject/remapping) SourceMaps
 
@@ -29,6 +29,9 @@ Options:
                                              [string] [default: "tsconfig.json"]
       --baseUrl           Base URL to use when rewriting imports/exports[string]
       --logLevel  [string] [choices: "debug", "info", "error"] [default: "info"]
+      --registryFile      Configure where to write Document Registry to JSON.
+                          Useful for debugging                          [string]
+      --sourceMaps                                     [boolean] [default: true]
       --help              Show help                                    [boolean]
 ```
 

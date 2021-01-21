@@ -4,8 +4,8 @@ import { Document } from '../../domain/model'
 import { op } from './common'
 import { LoggerEnv } from './logging'
 
-export const toposortDocuments = op<(documents: readonly Document[]) => Effect<LoggerEnv, readonly Document[]>>()(
-  'toposortDocuments',
-)
+export const sortDocuments = op<
+  (documents: readonly Document[]) => Effect<LoggerEnv, ReadonlyArray<ReadonlySet<Document>>>
+>()('sortDocuments')
 
-export type ToposortDocumentsEnv = EnvOf<typeof toposortDocuments>
+export type SortDocumentsEnv = EnvOf<typeof sortDocuments>

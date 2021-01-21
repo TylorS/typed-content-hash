@@ -12,7 +12,7 @@ import { readDirectory } from './services/readDirectory'
 import { readFilePath } from './services/readFilePath'
 import { rewriteDependencies } from './services/rewriteDependencies'
 import { rewriteSourceMapUrls } from './services/rewriteSourceMapUrls'
-import { toposortDocuments } from './services/toposortDocuments'
+import { sortDocuments } from './services/toposortDocuments'
 
 const uniqDocumentPaths = pipe(
   ordString,
@@ -42,7 +42,7 @@ export const hashDirectory = (directory: string) =>
     )
 
     // Sort them all so we can rewrite hashes effectively
-    const documents: readonly Document[] = yield* toposortDocuments([
+    const sortedDocuments = yield* sortDocuments([
       ...supportedDocuments,
       ...dependencies.filter((d) => !supportedDocumentRegistry.has(d.filePath)),
     ])
@@ -55,9 +55,9 @@ export const hashDirectory = (directory: string) =>
       ...dependencies.map((d) => [d.filePath, d] as const),
     ])
 
-    for (const document of documents) {
+    for (const documents of sortedDocuments) {
       documentRegistry = yield* pipe(
-        rewriteDependencies(document),
+        rewriteDependencies(documents),
         useSome<DocumentRegistryEnv>({ documentRegistry }),
       )
     }

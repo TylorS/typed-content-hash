@@ -26,7 +26,7 @@ export type RewriteDependenciesImplementationEnv = {
 }
 
 export const rewriteDependencies = (
-  documents: ReadonlySet<Document>,
+  documents: ReadonlyArray<Document>,
 ): Effect<DocumentRegistryEnv & LoggerEnv & RewriteDependenciesImplementationEnv, DocumentRegistry> =>
   doEffect(function* () {
     const env = yield* ask<RewriteDependenciesImplementationEnv & DocumentRegistryEnv>()
@@ -116,10 +116,10 @@ function ensureAbsolute(path: string) {
   return path
 }
 
-function computeContentHashes(documents: ReadonlySet<Document>, registry: DocumentRegistry, hashLength: number) {
+function computeContentHashes(documents: ReadonlyArray<Document>, registry: DocumentRegistry, hashLength: number) {
   const computedHashes = new Map<string, string>()
 
-  if (documents.size < 2) {
+  if (documents.length < 2) {
     return computedHashes
   }
 

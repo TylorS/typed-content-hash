@@ -77,10 +77,10 @@ const rewriteDocumentDependencies = (
 
 type ReplacementPathOptions = RewriteDependenciesImplementationEnv &
   DocumentRegistryEnv & {
-    document: Document
-    depDoc: Document
-    dep: Dependency
-    computedHashes: Map<string, string>
+    readonly document: Document
+    readonly depDoc: Document
+    readonly dep: Dependency
+    readonly computedHashes: Map<string, string>
   }
 
 function determineReplacementPath({

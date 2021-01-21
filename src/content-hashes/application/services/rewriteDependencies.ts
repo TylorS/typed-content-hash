@@ -6,7 +6,7 @@ import { op } from './common'
 import { LoggerEnv } from './logging'
 
 export const rewriteDependencies = op<
-  (document: Document) => Effect<LoggerEnv & DocumentRegistryEnv, DocumentRegistry>
+  (documents: ReadonlySet<Document>) => Effect<LoggerEnv & DocumentRegistryEnv, DocumentRegistry>
 >()('rewriteDependencies')
 
 export type RewriteDependenciesEnv = EnvOf<typeof rewriteDependencies>

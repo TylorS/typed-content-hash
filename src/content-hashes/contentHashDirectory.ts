@@ -24,7 +24,7 @@ import {
   rewriteDependencies,
   RewriteDependenciesImplementationEnv,
   rewriteSourceMapUrls,
-  topoSortDocs,
+  sortDiGraph,
 } from './infrastructure'
 import { normalizeRegistry } from './infrastructure/normalizeRegistry'
 import { getFileExtension } from './infrastructure/plugins/getFileExtension'
@@ -119,7 +119,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
             .filter(isSome)
             .map((o) => o.value)
         }),
-      toposortDocuments: topoSortDocs,
+      sortDocuments: sortDiGraph,
       readFilePath: (path) =>
         doEffect(function* () {
           const doc = yield* readFilePath(path)
@@ -131,9 +131,9 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
           return removeSourceMaps(doc.value)
         }),
       rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength, sourceMaps),
-      rewriteDependencies: (doc) =>
+      rewriteDependencies: (...args) =>
         pipe(
-          rewriteDependencies(doc),
+          rewriteDependencies(...args),
           provideSome<RewriteDependenciesImplementationEnv>({
             hashLength,
             directory,

@@ -1,12 +1,12 @@
 import { doEffect, Effect } from '@typed/fp'
+import { DependencyMap, fromDependencyMap, getStronglyConnectedComponents } from '@typed/fp/DiGraph/exports'
 import { pipe } from 'fp-ts/lib/function'
 import { isNone } from 'fp-ts/lib/Option'
 import { contramap as contraOrd, ordNumber } from 'fp-ts/lib/Ord'
-import { sort } from 'fp-ts/lib/ReadonlyArray'
+import { map, sort } from 'fp-ts/lib/ReadonlyArray'
 
 import { debug, LoggerEnv } from '../application/services/logging'
 import { Document } from '../domain/model'
-import { DiGraph, tarjan } from './tarjan'
 
 const sortDocuments = pipe(
   ordNumber,
@@ -21,17 +21,23 @@ export const sortDiGraph = (
   doEffect(function* () {
     yield* debug(`Sorting documents...`)
 
-    const components = pipe(documents, sortDocuments, createDiGraph, tarjan)
     const docsByPath = new Map(documents.map((d) => [d.filePath, d] as const))
 
-    return components.map((docs) => docs.map((p) => docsByPath.get(p)!))
+    return pipe(
+      documents,
+      sortDocuments,
+      createDepMap,
+      fromDependencyMap,
+      getStronglyConnectedComponents,
+      map((docs) => docs.map((p) => docsByPath.get(p)!)),
+    )
   })
 
-function createDiGraph(documents: readonly Document[]): DiGraph<string> {
-  const graph = new Map<string, ReadonlySet<string>>()
+function createDepMap(documents: readonly Document[]): DependencyMap<string> {
+  const graph = new Map<string, ReadonlyArray<string>>()
 
   for (const document of documents) {
-    graph.set(document.filePath, new Set(document.dependencies.map((d) => d.filePath)))
+    graph.set(document.filePath, Array.from(new Set(document.dependencies.map((d) => d.filePath))))
   }
 
   return graph

@@ -44,6 +44,7 @@
     "base64url": "^3.0.1",
     "builtin-modules": "^3.2.0",
     "css-tree": "^1.1.2",
+    "enhanced-resolve": "^5.7.0",
     "fp-ts": "^2.9.3",
     "himalaya": "^1.1.0",
     "magic-string": "^0.25.7",

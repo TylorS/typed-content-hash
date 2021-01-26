@@ -394,7 +394,9 @@ const expected = {
 }
 
 describe('hashDirectory', () => {
-  it('hashes a directory into a registry', (done) => {
+  it('hashes a directory into a registry', function (done) {
+    this.timeout(10000)
+
     const test = doEffect(function* () {
       try {
         const registry = yield* hashDirectory(testDirectory)

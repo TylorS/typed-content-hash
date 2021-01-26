@@ -10,6 +10,7 @@ import { Dependency, Document } from '../../domain/model'
 import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { HashPlugin } from '../HashPlugin'
+import { MAIN_FIELDS } from './defaults'
 import { getFileExtension } from './getFileExtension'
 import { isExternalUrl } from './isExternalUrl'
 import { resolvePackage } from './resolvePackage'
@@ -87,9 +88,10 @@ const searchMap: Readonly<Record<string, readonly string[]>> = {
 
 export interface HtmlPuginOptions {
   readonly buildDirectory: string
+  readonly mainFields?: readonly string[]
 }
 
-export function createHtmlPlugin({ buildDirectory }: HtmlPuginOptions): HashPlugin {
+export function createHtmlPlugin({ buildDirectory, mainFields = MAIN_FIELDS }: HtmlPuginOptions): HashPlugin {
   const html: HashPlugin = {
     readFilePath: (filePath) =>
       doEffect(function* () {
@@ -105,7 +107,7 @@ export function createHtmlPlugin({ buildDirectory }: HtmlPuginOptions): HashPlug
         const initial = yield* fsReadFile(filePath, { supportsSourceMaps: false, isBase64Encoded: false })
         yield* debug(`${yellow(`[HTML]`)} Finding Dependencies ${filePath}...`)
 
-        const document: Document = findDependencies(initial, buildDirectory)
+        const document: Document = findDependencies(initial, buildDirectory, mainFields)
 
         return some({ ...document, contentHash: none, sourceMap: none })
       }),
@@ -114,12 +116,12 @@ export function createHtmlPlugin({ buildDirectory }: HtmlPuginOptions): HashPlug
   return html
 }
 
-function findDependencies(document: Document, buildDirectory: string) {
+function findDependencies(document: Document, buildDirectory: string, mainFields: readonly string[]) {
   const directory = dirname(document.filePath)
   const ast = parse(document.contents, { ...parseDefaults, includePositions: true })
   const dependencies = ast
     .map(astToTree)
-    .flatMap(foldDependencies(isValidDependency(buildDirectory, directory, document.contents)))
+    .flatMap(foldDependencies(isValidDependency(buildDirectory, directory, mainFields, document.contents)))
 
   return { ...document, dependencies }
 }
@@ -131,7 +133,7 @@ function astToTree(ast: HtmlAst): Tree<HtmlAst> {
   }
 }
 
-function isValidDependency(buildDirectory: string, directory: string, contents: string) {
+function isValidDependency(buildDirectory: string, directory: string, mainFields: readonly string[], contents: string) {
   return (ast: HtmlAst): readonly Dependency[] => {
     if (ast.type !== 'element' || !(ast.tagName.toLowerCase() in searchMap)) {
       return []
@@ -141,13 +143,19 @@ function isValidDependency(buildDirectory: string, directory: string, contents: 
 
     return ast.attributes
       .filter(({ key }) => attributesToSearch.includes(key))
-      .map(getDependency(buildDirectory, directory, contents, ast))
+      .map(getDependency(buildDirectory, directory, mainFields, contents, ast))
       .filter(isSome)
       .map((o) => o.value)
   }
 }
 
-function getDependency(buildDirectory: string, directory: string, contents: string, ast: HtmlAst) {
+function getDependency(
+  buildDirectory: string,
+  directory: string,
+  mainFields: readonly string[],
+  contents: string,
+  ast: HtmlAst,
+) {
   const { position } = ast
   const astStart = position.start.index
   const astEnd = position.end.index
@@ -164,7 +172,12 @@ function getDependency(buildDirectory: string, directory: string, contents: stri
     }
 
     try {
-      const filePath = resolvePackage({ moduleSpecifier: relativeSpecifier, directory, extensions: ['.js'] })
+      const filePath = resolvePackage({
+        moduleSpecifier: relativeSpecifier,
+        directory,
+        extensions: ['.js'],
+        mainFields,
+      })
 
       const dep: Dependency = {
         specifier: attr.value,

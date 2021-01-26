@@ -9,6 +9,7 @@ import { Dependency, Document } from '../../domain/model'
 import { fsReadFile } from '../fsReadFile'
 import { getHashFor } from '../hashes/getHashFor'
 import { HashPlugin } from '../HashPlugin'
+import { MAIN_FIELDS } from './defaults'
 import { getFileExtension } from './getFileExtension'
 import { isExternalUrl } from './isExternalUrl'
 import { resolvePackage } from './resolvePackage'
@@ -19,7 +20,11 @@ export type NonNullableKeys<A, Keys extends keyof A> = Readonly<Omit<A, Keys>> &
 const supportedExtensions = ['.css.map', '.css']
 const sourceMapExt = '.map'
 
-export function createCssPlugin(): HashPlugin {
+export type CssPluginOptions = {
+  readonly mainFields?: readonly string[]
+}
+
+export function createCssPlugin({ mainFields = MAIN_FIELDS }: CssPluginOptions): HashPlugin {
   const css: HashPlugin = {
     readFilePath: (filePath) =>
       doEffect(function* () {
@@ -41,14 +46,14 @@ export function createCssPlugin(): HashPlugin {
 
         yield* debug(`${yellow(`[CSS]`)} Finding dependencies ${filePath}...`)
 
-        return some(findDependencies(initial))
+        return some(findDependencies(initial, mainFields))
       }),
   }
 
   return css
 }
 
-function findDependencies(document: Document): Document {
+function findDependencies(document: Document, mainFields: readonly string[]): Document {
   const filename = basename(document.filePath)
   const ast = parse(document.contents, { filename, positions: true })
   const dependencies = new Set<Dependency>()
@@ -56,8 +61,8 @@ function findDependencies(document: Document): Document {
   walk(ast, (node) =>
     cond(
       [
-        cond.create(isAtRule, (node) => parseAtRule(document.filePath, node, dependencies)),
-        cond.create(isUrl, (node) => parseUrl(document.filePath, node, dependencies)),
+        cond.create(isAtRule, (node) => parseAtRule(document.filePath, node, dependencies, mainFields)),
+        cond.create(isUrl, (node) => parseUrl(document.filePath, node, dependencies, mainFields)),
       ],
       node,
     ),
@@ -98,7 +103,12 @@ const findAtRuleSpecifier = (rule: NonNullableKeys<Atrule, 'loc'>): SpecifierPos
 
 type SpecifierPosition = { specifier: string; position: Dependency['position'] }
 
-const parseAtRule = (filePath: string, rule: NonNullableKeys<Atrule, 'loc'>, dependencies: Set<Dependency>) => {
+const parseAtRule = (
+  filePath: string,
+  rule: NonNullableKeys<Atrule, 'loc'>,
+  dependencies: Set<Dependency>,
+  mainFields: readonly string[],
+) => {
   const specifier = findAtRuleSpecifier(rule)
 
   if (specifier && !isExternalUrl(specifier.specifier)) {
@@ -106,6 +116,7 @@ const parseAtRule = (filePath: string, rule: NonNullableKeys<Atrule, 'loc'>, dep
       directory: dirname(filePath),
       moduleSpecifier: specifier.specifier,
       extensions: supportedExtensions,
+      mainFields,
     })
 
     const dependency: Dependency = {
@@ -118,7 +129,12 @@ const parseAtRule = (filePath: string, rule: NonNullableKeys<Atrule, 'loc'>, dep
   }
 }
 
-const parseUrl = (filePath: string, url: NonNullableKeys<Url, 'loc'>, dependencies: Set<Dependency>) => {
+const parseUrl = (
+  filePath: string,
+  url: NonNullableKeys<Url, 'loc'>,
+  dependencies: Set<Dependency>,
+  mainFields: readonly string[],
+) => {
   const specifier = findUrlSpecifier(url)
 
   if (specifier && !isExternalUrl(specifier.specifier)) {
@@ -126,6 +142,7 @@ const parseUrl = (filePath: string, url: NonNullableKeys<Url, 'loc'>, dependenci
       directory: dirname(filePath),
       moduleSpecifier: specifier.specifier,
       extensions: supportedExtensions,
+      mainFields,
     })
 
     const dependency: Dependency = {

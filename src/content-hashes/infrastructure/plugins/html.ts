@@ -14,6 +14,15 @@ import { getFileExtension } from './getFileExtension'
 import { isExternalUrl } from './isExternalUrl'
 import { resolvePackage } from './resolvePackage'
 
+const HTTP_EQUIV = 'http-equiv'
+const REFRESH = 'refresh'
+
+const isHttpEquiv = ({ attributes }: HtmlAst) => {
+  const attr = attributes.find((x) => x.key === HTTP_EQUIV)
+
+  return attr?.value.toLowerCase() === REFRESH
+}
+
 export type HtmlAst = {
   readonly type: string
   readonly tagName: string
@@ -138,7 +147,13 @@ function isValidDependency(buildDirectory: string, directory: string, contents: 
       return []
     }
 
-    const attributesToSearch = searchMap[ast.tagName.toLowerCase()]
+    const tagName = ast.tagName.toLowerCase()
+
+    if (tagName === 'meta' && !isHttpEquiv(ast)) {
+      return []
+    }
+
+    const attributesToSearch = searchMap[tagName]
 
     return ast.attributes
       .filter(({ key }) => attributesToSearch.includes(key))
@@ -158,7 +173,7 @@ function getDependency(buildDirectory: string, directory: string, contents: stri
     const start = findSourceIndex(sourceString, attr)
     const end = start + attr.value.length
     const relativeSpecifier = ensureRelativeSpecifier(attr.value, buildDirectory, directory)
-    const hasFileExtension = extname(relativeSpecifier) !== ''
+    const hasFileExtension = isFileExtension(extname(relativeSpecifier))
 
     if (isExternalUrl(relativeSpecifier)) {
       return none
@@ -229,4 +244,14 @@ function ensureRelativeSpecifier(specifier: string, buildDirectory: string, dire
   }
 
   return specifier
+}
+
+function isFileExtension(ext: string) {
+  const n = parseFloat(ext)
+
+  if (!Number.isNaN(n)) {
+    return false
+  }
+
+  return !ext.includes(' ')
 }

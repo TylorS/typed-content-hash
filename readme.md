@@ -32,6 +32,8 @@ Options:
       --registryFile      Configure where to write Document Registry to JSON.
                           Useful for debugging                          [string]
       --sourceMaps                                     [boolean] [default: true]
+      --mainFields        Configure package.json fields to look for dependencies
+                                                   [array] [default: ["module"]]
       --help              Show help                                    [boolean]
 ```
 

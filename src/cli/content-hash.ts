@@ -49,6 +49,11 @@ const options = yargs
     type: 'boolean',
     default: true,
   })
+  .options('mainFields', {
+    type: 'array',
+    default: ['module'],
+    description: 'Configure package.json fields to look for dependencies',
+  })
   .help().argv
 
 function getLogLevel(option: string) {
@@ -76,6 +81,7 @@ contentHashDirectory({
   assetManifest: resolve(directory, options.assetManifest),
   baseUrl: options.baseUrl,
   plugins: createDefaultPlugins({
+    mainFields: options.mainFields,
     buildDirectory: directory,
     compilerOptions: pipe(
       tsConfig,

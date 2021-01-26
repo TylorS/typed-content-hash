@@ -1,6 +1,6 @@
 import { deepEqualsEq, doEffect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
 import builtinModules from 'builtin-modules'
-import { eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
+import { Eq, eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
 import { pipe } from 'fp-ts/lib/function'
 import { isSome, map as mapOption, none, some } from 'fp-ts/lib/Option'
 import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
@@ -16,6 +16,7 @@ import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { getHashFor } from '../hashes/getHashFor'
 import { HashPlugin } from '../HashPlugin'
+import { MAIN_FIELDS } from './defaults'
 import { getFileExtension } from './getFileExtension'
 import { resolvePathFromSourceFile } from './resolvePathFromSourceFile'
 import { createResolveTsConfigPaths, TsConfigPathsResolver } from './resolveTsConfigPaths'
@@ -27,14 +28,16 @@ const resolvePath = memoize(
     getStructEq({
       moduleSpecifier: eqString,
       directory: eqString,
-      pathsResolver: deepEqualsEq,
+      pathsResolver: deepEqualsEq as Eq<TsConfigPathsResolver>,
       extensions: getEq(eqString),
+      mainFields: getEq(eqString),
     }),
   ),
 )(resolvePathFromSourceFile)
 
 export type JavascriptPluginOptions = {
   readonly compilerOptions?: CompilerOptions
+  readonly mainFields?: readonly string[]
 }
 
 const multiSeparatedExtensions = ['.proxy.js', '.d.ts.map', '.js.map', '.d.ts']
@@ -82,7 +85,7 @@ const getProxyReplacementExt = (ext: string): string => {
 }
 
 export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPlugin => {
-  const { compilerOptions = getDefaultCompilerOptions() } = options
+  const { compilerOptions = getDefaultCompilerOptions(), mainFields = MAIN_FIELDS } = options
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
     compilerOptions: { ...compilerOptions, allowJs: true },
@@ -114,14 +117,19 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
 
         yield* debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`)
 
-        return some(yield* findDependencies(project, pathsResolver, document))
+        return some(yield* findDependencies(project, pathsResolver, mainFields, document))
       }),
   }
 
   return javascript
 }
 
-function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver, document: Document): Pure<Document> {
+function findDependencies(
+  project: Project,
+  pathsResolver: TsConfigPathsResolver,
+  mainFields: readonly string[],
+  document: Document,
+): Pure<Document> {
   const contents = document.contents
   const sourceFile = project.getSourceFile(document.filePath) || project.createSourceFile(document.filePath, contents)
 
@@ -162,6 +170,7 @@ function findDependencies(project: Project, pathsResolver: TsConfigPathsResolver
           directory: dirname(sourceFilePath),
           pathsResolver,
           extensions: getExtensions(extension),
+          mainFields,
         }),
         map(
           mapOption((filePath) => {

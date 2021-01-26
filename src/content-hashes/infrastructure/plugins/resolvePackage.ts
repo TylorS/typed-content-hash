@@ -8,7 +8,6 @@ const moduleDirectory = ['node_modules', '@types']
 const enhancedResolveOptions = {
   fileSystem: require('fs'),
   useSyncFileSystemCalls: true,
-  mainFields: ['main', 'module'],
   enforceExtension: false,
   modules: moduleDirectory,
 }
@@ -17,12 +16,14 @@ export type ResolvePackageOptions = {
   readonly moduleSpecifier: string
   readonly directory: string
   readonly extensions: readonly string[]
+  readonly mainFields: readonly string[]
 }
 
 export function resolvePackage(options: ResolvePackageOptions) {
-  const { moduleSpecifier, directory, extensions } = options
+  const { moduleSpecifier, directory, extensions, mainFields } = options
   const resolver = enhancedResolve.ResolverFactory.createResolver({
     ...enhancedResolveOptions,
+    mainFields: mainFields ? Array.from(mainFields) : void 0,
     extensions: Array.from(extensions),
   })
 

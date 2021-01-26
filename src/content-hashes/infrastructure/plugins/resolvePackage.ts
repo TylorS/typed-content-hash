@@ -1,8 +1,17 @@
+import enhancedResolve from 'enhanced-resolve'
 import resolve from 'resolve'
 
 import { getFileExtension } from './getFileExtension'
 
 const moduleDirectory = ['node_modules', '@types']
+
+const enhancedResolveOptions = {
+  fileSystem: require('fs'),
+  useSyncFileSystemCalls: true,
+  mainFields: ['main', 'module'],
+  enforceExtension: false,
+  modules: moduleDirectory,
+}
 
 export type ResolvePackageOptions = {
   readonly moduleSpecifier: string
@@ -12,13 +21,23 @@ export type ResolvePackageOptions = {
 
 export function resolvePackage(options: ResolvePackageOptions) {
   const { moduleSpecifier, directory, extensions } = options
-
-  return resolve.sync(moduleSpecifier, {
-    basedir: directory,
-    moduleDirectory,
-    extensions,
-    packageIterator,
+  const resolver = enhancedResolve.ResolverFactory.createResolver({
+    ...enhancedResolveOptions,
+    extensions: Array.from(extensions),
   })
+
+  const pkg = resolver.resolveSync({}, directory, moduleSpecifier)
+
+  if (!pkg) {
+    return resolve.sync(moduleSpecifier, {
+      basedir: directory,
+      moduleDirectory,
+      extensions,
+      packageIterator,
+    })
+  }
+
+  return pkg
 }
 
 const packageIterator = (request: string, _: string, defaultCanditates: () => string[]): string[] => {

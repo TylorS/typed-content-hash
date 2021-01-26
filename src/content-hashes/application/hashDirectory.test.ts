@@ -189,7 +189,7 @@ const expected = {
     filePath: 'index.html',
     fileExtension: '.html',
     contents:
-      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app"></div>\n\n  <script type="module" src="./index.NWkKj7N8Hd6f.js"></script>\n</body>\n\n</html>\n',
+      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app"></div>\n\n  <script type="module" src="./index.NWkKj7N8Hd6f.js"></script>\n</body>\n\n</html>\n',
     contentHash: {
       _tag: 'None',
     },
@@ -199,8 +199,8 @@ const expected = {
         filePath: 'index.css',
         fileExtension: '.css',
         position: {
-          start: 69,
-          end: 80,
+          start: 142,
+          end: 153,
         },
       },
       {
@@ -208,8 +208,8 @@ const expected = {
         filePath: 'index.js',
         fileExtension: '.js',
         position: {
-          start: 154,
-          end: 164,
+          start: 227,
+          end: 237,
         },
       },
     ],

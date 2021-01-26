@@ -70,7 +70,6 @@ const searchMap: Readonly<Record<string, readonly string[]>> = {
   ins: ['cite'],
   link: ['href'],
   menuitem: ['icon'],
-  meta: ['content'],
   object: ['codebase', 'data'],
   q: ['cite'],
   script: ['src'],

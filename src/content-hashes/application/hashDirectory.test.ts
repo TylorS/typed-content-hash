@@ -189,7 +189,7 @@ const expected = {
     filePath: 'index.html',
     fileExtension: '.html',
     contents:
-      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app"></div>\n\n  <script type="module" src="./index.NWkKj7N8Hd6f.js"></script>\n</body>\n\n</html>\n',
+      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app">\n\n    <img srcset="./fake-image-x4.ooKWSSJ0apZX.png 4x,\n                 ./fake-image-x3.dnonbURMTOmA.png 3x,\n                 ./fake-image-x2.ng0eXyXAgxHn.png 2x,\n                 ./fake-image-x1.G6V284hJv-PY.png 1x" />\n  </div>\n\n  <script type="module" src="./index.NWkKj7N8Hd6f.js"></script>\n</body>\n\n</html>\n',
     contentHash: {
       _tag: 'None',
     },
@@ -204,12 +204,48 @@ const expected = {
         },
       },
       {
+        specifier: './fake-image-x4.png',
+        filePath: 'fake-image-x4.png',
+        fileExtension: '.png',
+        position: {
+          start: 209,
+          end: 228,
+        },
+      },
+      {
+        specifier: './fake-image-x3.png',
+        filePath: 'fake-image-x3.png',
+        fileExtension: '.png',
+        position: {
+          start: 250,
+          end: 269,
+        },
+      },
+      {
+        specifier: './fake-image-x2.png',
+        filePath: 'fake-image-x2.png',
+        fileExtension: '.png',
+        position: {
+          start: 291,
+          end: 310,
+        },
+      },
+      {
+        specifier: './fake-image-x1.png',
+        filePath: 'fake-image-x1.png',
+        fileExtension: '.png',
+        position: {
+          start: 332,
+          end: 351,
+        },
+      },
+      {
         specifier: './index.js',
         filePath: 'index.js',
         fileExtension: '.js',
         position: {
-          start: 227,
-          end: 237,
+          start: 398,
+          end: 408,
         },
       },
     ],
@@ -257,6 +293,74 @@ const expected = {
       value: {
         type: 'hash',
         hash: 'SqTwlyhFaQu3dLbn19MVS9jrp91n34OyLW63Tz8YiaMhi3dSpANixMKC0uz-scQnXZO1dsrsuiZdc8kVKhh-Pw',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'None',
+    },
+    isBase64Encoded: true,
+  },
+  'fake-image-x4.png': {
+    filePath: 'fake-image-x4.png',
+    fileExtension: '.png',
+    contents: 'ZmFrZS1pbWFnZS00Cg==',
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hash',
+        hash: 'ooKWSSJ0apZXZAsF68nKFwGT0sd1FK5WRHrXlocmwL4qHg_8cRwkVeTqPTGPxnLINsfj1QcTofOkTmzNKyrFHQ',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'None',
+    },
+    isBase64Encoded: true,
+  },
+  'fake-image-x3.png': {
+    filePath: 'fake-image-x3.png',
+    fileExtension: '.png',
+    contents: 'ZmFrZS1pbWFnZS0zCg==',
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hash',
+        hash: 'dnonbURMTOmAvCzGmAf_N2JmVrkUE_EMfRf3N5MmpuI0eVteIxa1XQgPT55I1ycVuoufyoTCwBxRFlkH7NmabQ',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'None',
+    },
+    isBase64Encoded: true,
+  },
+  'fake-image-x2.png': {
+    filePath: 'fake-image-x2.png',
+    fileExtension: '.png',
+    contents: 'ZmFrZS1pbWFnZS0yCg==',
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hash',
+        hash: 'ng0eXyXAgxHnX76c_PZEVlP50H_7jQ6kybXGBqSBcmGuumvOAOhkfWfwbZgsNqJxyrmKk2z9v40beg-atkqAFA',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'None',
+    },
+    isBase64Encoded: true,
+  },
+  'fake-image-x1.png': {
+    filePath: 'fake-image-x1.png',
+    fileExtension: '.png',
+    contents: 'ZmFrZS1pbWFnZS0xCg==',
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hash',
+        hash: 'G6V284hJv-PYBFNLdmip8v3cCC1wJNXns45LPZXI0dcGmOHMuWhBY4y7dowjdal0K7AR2GpfqeeukNTt9k46Cg',
       },
     },
     dependencies: [],
@@ -395,8 +499,6 @@ const expected = {
 
 describe('hashDirectory', () => {
   it('hashes a directory into a registry', function (done) {
-    this.timeout(10000)
-
     const test = doEffect(function* () {
       try {
         const registry = yield* hashDirectory(testDirectory)

@@ -1,18 +1,19 @@
 import { doEffect } from '@typed/fp'
-import { isSome, none, Option, some } from 'fp-ts/lib/Option'
+import { isSome, none, some } from 'fp-ts/lib/Option'
 import { getMonoid } from 'fp-ts/lib/ReadonlyArray'
 import { foldMap, Tree } from 'fp-ts/lib/Tree'
 import { dirname, extname, relative, resolve } from 'path'
 import { red, yellow } from 'typed-colors'
 
 import { debug } from '../../application/services/logging'
-import { Dependency, Document } from '../../domain/model'
+import { Dependency, Document, Position } from '../../domain/model'
 import { ensureRelative } from '../ensureRelative'
 import { fsReadFile } from '../fsReadFile'
 import { HashPlugin } from '../HashPlugin'
 import { MAIN_FIELDS } from './defaults'
 import { getFileExtension } from './getFileExtension'
 import { isExternalUrl } from './isExternalUrl'
+import { parseSrcSets } from './parseSrcSets'
 import { resolvePackage } from './resolvePackage'
 
 export type HtmlAst = {
@@ -135,21 +136,25 @@ function astToTree(ast: HtmlAst): Tree<HtmlAst> {
 
 function isValidDependency(buildDirectory: string, directory: string, mainFields: readonly string[], contents: string) {
   return (ast: HtmlAst): readonly Dependency[] => {
-    if (ast.type !== 'element' || !(ast.tagName.toLowerCase() in searchMap)) {
+    if (ast.type !== 'element') {
       return []
     }
 
-    const attributesToSearch = searchMap[ast.tagName.toLowerCase()]
+    const tagName = ast.tagName.toLowerCase()
+
+    if (!(tagName in searchMap)) {
+      return []
+    }
+
+    const attributesToSearch = searchMap[tagName]
 
     return ast.attributes
       .filter(({ key }) => attributesToSearch.includes(key))
-      .map(getDependency(buildDirectory, directory, mainFields, contents, ast))
-      .filter(isSome)
-      .map((o) => o.value)
+      .flatMap(getDependencies(buildDirectory, directory, mainFields, contents, ast))
   }
 }
 
-function getDependency(
+function getDependencies(
   buildDirectory: string,
   directory: string,
   mainFields: readonly string[],
@@ -160,44 +165,24 @@ function getDependency(
   const astStart = position.start.index
   const astEnd = position.end.index
   const sourceString = contents.slice(astStart, astEnd)
+  const tagName = ast.tagName.toLowerCase()
 
-  return (attr: HtmlAttribute): Option<Dependency> => {
-    const start = findSourceIndex(sourceString, attr)
-    const end = start + attr.value.length
-    const relativeSpecifier = ensureRelativeSpecifier(attr.value, buildDirectory, directory)
-    const hasFileExtension = extname(relativeSpecifier) !== ''
+  return (attr: HtmlAttribute): ReadonlyArray<Dependency> => {
+    const attrStart = astStart + findSourceIndex(sourceString, attr)
+    const attrEnd = attrStart + attr.value.length
+    const isImgSrcSet = tagName === 'img' && attr.key === 'srcset'
+    const resolved = isImgSrcSet
+      ? parseSrcSets(attr.value, attrStart).map((s) =>
+          resolveSpecifier(buildDirectory, directory, s.url, mainFields, s.position),
+        )
+      : [
+          resolveSpecifier(buildDirectory, directory, attr.value, mainFields, {
+            start: attrStart,
+            end: attrEnd,
+          }),
+        ]
 
-    if (isExternalUrl(relativeSpecifier)) {
-      return none
-    }
-
-    try {
-      const filePath = resolvePackage({
-        moduleSpecifier: relativeSpecifier,
-        directory,
-        extensions: ['.js'],
-        mainFields,
-      })
-
-      const dep: Dependency = {
-        specifier: attr.value,
-        filePath: filePath,
-        fileExtension: getFileExtension(filePath),
-        position: {
-          start: start + astStart,
-          end: end + astStart,
-        },
-      }
-
-      return some(dep)
-    } catch (error) {
-      // If we're really sure it is supposed to be a file, throw the error
-      if (hasFileExtension) {
-        throw error
-      }
-
-      return none
-    }
+    return resolved.filter(isSome).map((o) => o.value)
   }
 }
 
@@ -241,4 +226,58 @@ function ensureRelativeSpecifier(specifier: string, buildDirectory: string, dire
   }
 
   return specifier
+}
+
+function resolveSpecifier(
+  buildDirectory: string,
+  directory: string,
+  specifier: string,
+  mainFields: readonly string[],
+  position: Position,
+) {
+  const relativeSpecifier = ensureRelativeSpecifier(specifier, buildDirectory, directory)
+  const hasFileExtension = isFileExtension(extname(relativeSpecifier))
+
+  if (isExternalUrl(relativeSpecifier)) {
+    return none
+  }
+
+  try {
+    const filePath = resolvePackage({
+      moduleSpecifier: relativeSpecifier,
+      directory,
+      extensions: ['.js'],
+      mainFields,
+    })
+
+    const dep: Dependency = {
+      specifier,
+      filePath,
+      fileExtension: getFileExtension(filePath),
+      position,
+    }
+
+    return some(dep)
+  } catch (error) {
+    // If we're really sure it is supposed to be a file, throw the error
+    if (hasFileExtension) {
+      throw error
+    }
+
+    return none
+  }
+}
+
+function isFileExtension(ext: string): boolean {
+  if (!ext.trim()) {
+    return false
+  }
+
+  const n = Number.parseFloat(ext)
+
+  if (!Number.isNaN(n)) {
+    return false
+  }
+
+  return !ext.includes(' ')
 }

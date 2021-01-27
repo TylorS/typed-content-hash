@@ -21,24 +21,31 @@ export type ResolvePackageOptions = {
 
 export function resolvePackage(options: ResolvePackageOptions) {
   const { moduleSpecifier, directory, extensions, mainFields } = options
-  const resolver = enhancedResolve.ResolverFactory.createResolver({
-    ...enhancedResolveOptions,
-    mainFields: mainFields ? Array.from(mainFields) : void 0,
-    extensions: Array.from(extensions),
-  })
 
-  const pkg = resolver.resolveSync({}, directory, moduleSpecifier)
-
-  if (!pkg) {
+  try {
     return resolve.sync(moduleSpecifier, {
       basedir: directory,
       moduleDirectory,
       extensions,
       packageIterator,
     })
-  }
+  } catch (err) {
+    console.log('falling back to enhanced-resolve', moduleSpecifier)
 
-  return pkg
+    const resolver = enhancedResolve.ResolverFactory.createResolver({
+      ...enhancedResolveOptions,
+      mainFields: mainFields ? Array.from(mainFields) : void 0,
+      extensions: Array.from(extensions),
+    })
+
+    const pkg = resolver.resolveSync({}, directory, moduleSpecifier)
+
+    if (!pkg) {
+      throw err
+    }
+
+    return pkg
+  }
 }
 
 const packageIterator = (request: string, _: string, defaultCanditates: () => string[]): string[] => {

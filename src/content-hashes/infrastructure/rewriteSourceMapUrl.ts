@@ -38,11 +38,11 @@ export function rewriteSourceMapUrl(ms: MagicString, hashedPath: string) {
 }
 
 function cssTemplate(path: string) {
-  return `/*# sourceMappingURL=${path} *`
+  return `/*# sourceMappingURL=${path}.map *`
 }
 
 function jsTemplate(path: string) {
-  return `//# sourceMappingURL=${path}`
+  return `//# sourceMappingURL=${path}.map`
 }
 
 function getSourceMapUrl(code: string) {

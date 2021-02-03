@@ -25,7 +25,7 @@ const expected = {
     filePath: 'bar.d.ts',
     fileExtension: '.d.ts',
     contents:
-      "import { foo } from './foo.9uiZ4EPEU-sB'\n\nexport declare const bar: typeof foo\n//# sourceMappingURL=bar.JQP4to4mhneh.d.ts\n",
+      "import { foo } from './foo.9uiZ4EPEU-sB'\n\nexport declare const bar: typeof foo\n//# sourceMappingURL=bar.JQP4to4mhneh.d.ts.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
@@ -54,7 +54,7 @@ const expected = {
     filePath: 'bar.js',
     fileExtension: '.js',
     contents:
-      "import { foo } from './foo.9uiZ4EPEU-sB.js'\n\nexport const bar = () => foo()\n//# sourceMappingURL=bar.JQP4to4mhneh.js\n",
+      "import { foo } from './foo.9uiZ4EPEU-sB.js'\n\nexport const bar = () => foo()\n//# sourceMappingURL=bar.JQP4to4mhneh.js.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
@@ -83,7 +83,7 @@ const expected = {
     filePath: 'foo.d.ts',
     fileExtension: '.d.ts',
     contents:
-      "export declare const foo: () => 'foo'\nexport declare const foobar: () => string\n//# sourceMappingURL=foo.9uiZ4EPEU-sB.d.ts\n",
+      "export declare const foo: () => 'foo'\nexport declare const foobar: () => string\n//# sourceMappingURL=foo.9uiZ4EPEU-sB.d.ts.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
@@ -102,7 +102,7 @@ const expected = {
     filePath: 'foo.js',
     fileExtension: '.js',
     contents:
-      "import { bar } from './bar.JQP4to4mhneh.js'\n\nexport const foo = () => 'foo'\nexport const foobar = () => foo() + bar()\n//# sourceMappingURL=foo.9uiZ4EPEU-sB.js\n",
+      "import { bar } from './bar.JQP4to4mhneh.js'\n\nexport const foo = () => 'foo'\nexport const foobar = () => foo() + bar()\n//# sourceMappingURL=foo.9uiZ4EPEU-sB.js.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
@@ -131,7 +131,7 @@ const expected = {
     filePath: 'index.css',
     fileExtension: '.css',
     contents:
-      '.foo {\n  background-attachment: url(./test.SqTwlyhFaQu3.svg);\n}\n/*# sourceMappingURL=index.jPrPHrTrxlk1.css *\n',
+      '.foo {\n  background-attachment: url(./test.SqTwlyhFaQu3.svg);\n}\n/*# sourceMappingURL=index.jPrPHrTrxlk1.css.map *\n',
     contentHash: {
       _tag: 'Some',
       value: {
@@ -160,7 +160,7 @@ const expected = {
     filePath: 'index.d.ts',
     fileExtension: '.d.ts',
     contents:
-      "import { foo } from './foo.9uiZ4EPEU-sB'\n\nexport declare function bar(): `${ReturnType<typeof foo>}bar`\n//# sourceMappingURL=index.NWkKj7N8Hd6f.d.ts\n",
+      "import { foo } from './foo.9uiZ4EPEU-sB'\n\nexport declare function bar(): `${ReturnType<typeof foo>}bar`\n//# sourceMappingURL=index.NWkKj7N8Hd6f.d.ts.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
@@ -258,7 +258,7 @@ const expected = {
     filePath: 'index.js',
     fileExtension: '.js',
     contents:
-      "import { foo } from './foo.9uiZ4EPEU-sB.js'\n\nexport function bar() {\n  return foo() + 'bar'\n}\n//# sourceMappingURL=index.NWkKj7N8Hd6f.js\n",
+      "import { foo } from './foo.9uiZ4EPEU-sB.js'\n\nexport function bar() {\n  return foo() + 'bar'\n}\n//# sourceMappingURL=index.NWkKj7N8Hd6f.js.map\n",
     contentHash: {
       _tag: 'Some',
       value: {

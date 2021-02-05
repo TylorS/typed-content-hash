@@ -73,11 +73,9 @@ export function rewriteDocumentContents(
     }
 
     const sourceMapPath = sourceMap.value
-    const updatedSourceMapContents = JSON.parse(
-      magicString
-        .generateMap({ hires: true, file: filename, source: magicString.original, includeContent: true })
-        .toString(),
-    )
+    const updatedSourceMapContents = magicString
+      .generateMap({ hires: true, file: filename, source: magicString.original, includeContent: true })
+      .toString()
     const updatedSourceMap: Document = {
       filePath: sourceMapPath,
       fileExtension: document.fileExtension + sourceMapExt,

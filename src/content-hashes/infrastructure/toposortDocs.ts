@@ -1,9 +1,9 @@
 import { doEffect, Effect } from '@typed/fp'
 import { DependencyMap, fromDependencyMap, getStronglyConnectedComponents } from '@typed/fp/DiGraph/exports'
 import { pipe } from 'fp-ts/lib/function'
-import { isNone } from 'fp-ts/lib/Option'
+import { fromNullable, isNone } from 'fp-ts/lib/Option'
 import { contramap as contraOrd, ordNumber } from 'fp-ts/lib/Ord'
-import { map, sort } from 'fp-ts/lib/ReadonlyArray'
+import { compact, map, sort } from 'fp-ts/lib/ReadonlyArray'
 
 import { debug, LoggerEnv } from '../application/services/logging'
 import { Document } from '../domain/model'
@@ -29,7 +29,7 @@ export const sortDiGraph = (
       createDepMap,
       fromDependencyMap,
       getStronglyConnectedComponents,
-      map((docs) => docs.map((p) => docsByPath.get(p)!)),
+      map((docs) => compact(docs.map((p) => fromNullable(docsByPath.get(p))))),
     )
   })
 

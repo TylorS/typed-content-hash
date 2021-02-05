@@ -1,9 +1,11 @@
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { doEffect, fromTask, zip } from '@typed/fp'
 import { existsSync, promises } from 'fs'
+import { basename } from 'path'
 
 import { DocumentRegistry } from '../application/model'
-import { debug } from '../application/services/logging'
+import { debug, info } from '../application/services/logging'
+import { Document } from '../domain/model'
 import { getHashedPath } from './hashes/getHashedPath'
 import { replaceHash } from './hashes/replaceHash'
 
@@ -24,18 +26,7 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
           const pathChanged = document.filePath !== hashedPath
 
           if (hashedPath.endsWith(sourceMapExt) && pathChanged) {
-            const raw = JSON.parse(document.contents) as RawSourceMap
-
-            if (raw.file) {
-              const extension = document.fileExtension.replace(sourceMapExtRegex, '')
-              const parts = hashedPath.replace(new RegExp(`${document.fileExtension}$`), '').split(/\./g)
-              const hash = parts[parts.length - 1]
-
-              document = {
-                ...document,
-                contents: JSON.stringify({ ...raw, file: replaceHash(raw.file, extension, hash) }, null, 2),
-              }
-            }
+            document = yield* tryToRewriteFilename(document, hashedPath)
           }
 
           if (!document.isBase64Encoded && pathChanged && existsSync(document.filePath)) {
@@ -55,4 +46,25 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
   })
 
   return eff
+}
+
+function tryToRewriteFilename(document: Document, hashedPath: string) {
+  return doEffect(function* () {
+    try {
+      const raw = JSON.parse(document.contents) as RawSourceMap
+
+      const extension = document.fileExtension.replace(sourceMapExtRegex, '')
+      const parts = hashedPath.replace(new RegExp(`${document.fileExtension}$`), '').split(/\./g)
+      const hash = parts[parts.length - 1]
+
+      return {
+        ...document,
+        contents: JSON.stringify({ ...raw, file: replaceHash(basename(document.filePath), extension, hash) }, null, 2),
+      }
+    } catch (error) {
+      yield* info(`Unable to rewrite sourceMap file name for ${document.filePath}`)
+
+      return document
+    }
+  })
 }

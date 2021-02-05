@@ -1,6 +1,6 @@
 {
   "name": "@typed/content-hash",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Content hash a directory of HTML/JS/CSS files and other static assets",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

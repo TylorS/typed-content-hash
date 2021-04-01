@@ -495,6 +495,53 @@ const expected = {
     },
     isBase64Encoded: false,
   },
+  'standalone.tsx': {
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        hash: 'vH8HkrOEKN9bhWmZAgQ9seZYkqWJKhWHdcdZiXZMvxVEpf94jrz7n2EtzDT24LcXvl5HC6C5I2Qm8RHfXpTvGA',
+        type: 'hash',
+      },
+    },
+    contents:
+      "import * as React from 'react'\n\nexport function hello() {\n  return <span>world</span>\n}\n//# sourceMappingURL=standalone.vH8HkrOEKN9b.tsx.map\n",
+    dependencies: [
+      {
+        fileExtension: '.js',
+        filePath: '../node_modules/react/index.js',
+        position: {
+          end: 29,
+          start: 24,
+        },
+        specifier: 'react',
+      },
+    ],
+    fileExtension: '.tsx',
+    filePath: 'standalone.tsx',
+    isBase64Encoded: false,
+    sourceMap: {
+      _tag: 'Some',
+      value: 'standalone.tsx.map',
+    },
+  },
+  'standalone.tsx.map': {
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        filePath: 'standalone.tsx',
+        type: 'hashFor',
+      },
+    },
+    contents:
+      '{\n  "version": 3,\n  "file": "standalone.tsx",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACzB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC3B,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20*%20as%20React%20from%20\'react\'export%20function%20hello()%20%7B%20%20return%20%3Cspan%3Eworld%3C/span%3E%7D"\n  ],\n  "sourcesContent": [\n    "import * as React from \'react\'\\n\\nexport function hello() {\\n  return <span>world</span>\\n}\\n"\n  ]\n}',
+    dependencies: [],
+    fileExtension: '.tsx.map',
+    filePath: 'standalone.tsx.map',
+    isBase64Encoded: false,
+    sourceMap: {
+      _tag: 'None',
+    },
+  },
 }
 
 describe('hashDirectory', () => {

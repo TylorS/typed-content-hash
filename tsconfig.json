@@ -21,7 +21,8 @@
     "target": "es2019",
     "lib": [
       "dom",
-      "es2019"
+      "es2019",
+      "webworker"
     ]
   },
   "include": [

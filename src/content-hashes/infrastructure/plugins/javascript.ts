@@ -5,7 +5,7 @@ import { pipe } from 'fp-ts/lib/function'
 import { isSome, map as mapOption, none, some } from 'fp-ts/lib/Option'
 import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
 import { basename, dirname } from 'path'
-import { CompilerOptions, Project } from 'ts-morph'
+import { CompilerOptions, Project, SourceFile, StringLiteral } from 'ts-morph'
 import { red, yellow } from 'typed-colors'
 import { getDefaultCompilerOptions, SyntaxKind } from 'typescript'
 
@@ -135,6 +135,7 @@ function findDependencies(
 
   const sourceFilePath = sourceFile.getFilePath()
   const extension = getFileExtension(sourceFilePath)
+  const hasServiceWorkerRegister = contents.includes('serviceWorker.register')
 
   const standardStringLiterals = [
     ...sourceFile.getImportStringLiterals(),
@@ -142,6 +143,7 @@ function findDependencies(
       .getExportDeclarations()
       .map((d) => d.getModuleSpecifier())
       .filter(isNotUndefined),
+    ...(hasServiceWorkerRegister ? findServiceWorkerRegister(sourceFile) : []),
   ]
 
   const absoluteStringLiterals = [
@@ -198,4 +200,29 @@ function findDependencies(
       }),
     ),
   )
+}
+
+function findServiceWorkerRegister(sourceFile: SourceFile) {
+  const literals: StringLiteral[] = []
+
+  const callExpressions = sourceFile.getStatements().flatMap((s) => s.getChildrenOfKind(SyntaxKind.CallExpression))
+
+  callExpressions.forEach((callExpression) => {
+    const firstAccess = callExpression.getFirstDescendantByKind(SyntaxKind.PropertyAccessExpression)
+    const secondaryAccess = firstAccess?.getFirstDescendantByKind(SyntaxKind.PropertyAccessExpression)
+    const firstIdentifier = firstAccess?.getLastChildByKind(SyntaxKind.Identifier)?.getText()
+    const secondaryIdentifier = secondaryAccess
+      ? secondaryAccess.getLastChildByKind(SyntaxKind.Identifier)?.getText()
+      : firstAccess?.getFirstChildByKind(SyntaxKind.Identifier)?.getText()
+
+    if (firstIdentifier === 'register' && secondaryIdentifier === 'serviceWorker') {
+      literals.push(
+        ...callExpression
+          .getChildrenOfKind(SyntaxKind.SyntaxList)
+          .flatMap((l) => l.getChildrenOfKind(SyntaxKind.StringLiteral)),
+      )
+    }
+  })
+
+  return literals
 }

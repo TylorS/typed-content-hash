@@ -160,7 +160,7 @@ const expected = {
     filePath: 'index.d.ts',
     fileExtension: '.d.ts',
     contents:
-      "import { foo } from './foo.9uiZ4EPEU-sB'\n\nexport declare function bar(): `${ReturnType<typeof foo>}bar`\n//# sourceMappingURL=index.NWkKj7N8Hd6f.d.ts.map\n",
+      "import { foo } from './foo.9uiZ4EPEU-sB'\n\nexport declare function bar(): `${ReturnType<typeof foo>}bar`\n//# sourceMappingURL=index.MEc5qI_OWTs0.d.ts.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
@@ -189,7 +189,7 @@ const expected = {
     filePath: 'index.html',
     fileExtension: '.html',
     contents:
-      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app">\n\n    <img srcset="./fake-image-x4.ooKWSSJ0apZX.png 4x,\n                 ./fake-image-x3.dnonbURMTOmA.png 3x,\n                 ./fake-image-x2.ng0eXyXAgxHn.png 2x,\n                 ./fake-image-x1.G6V284hJv-PY.png 1x" />\n  </div>\n\n  <script type="module" src="./index.NWkKj7N8Hd6f.js"></script>\n</body>\n\n</html>\n',
+      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app">\n\n    <img srcset="./fake-image-x4.ooKWSSJ0apZX.png 4x,\n                 ./fake-image-x3.dnonbURMTOmA.png 3x,\n                 ./fake-image-x2.ng0eXyXAgxHn.png 2x,\n                 ./fake-image-x1.G6V284hJv-PY.png 1x" />\n  </div>\n\n  <script type="module" src="./index.MEc5qI_OWTs0.js"></script>\n</body>\n\n</html>\n',
     contentHash: {
       _tag: 'None',
     },
@@ -258,12 +258,12 @@ const expected = {
     filePath: 'index.js',
     fileExtension: '.js',
     contents:
-      "import { foo } from './foo.9uiZ4EPEU-sB.js'\n\nexport function bar() {\n  return foo() + 'bar'\n}\n//# sourceMappingURL=index.NWkKj7N8Hd6f.js.map\n",
+      "import { foo } from './foo.9uiZ4EPEU-sB.js'\n\nexport function bar() {\n  return foo() + 'bar'\n}\n\n// eslint-disable-next-line no-undef\nnavigator.serviceWorker.register('./sw.L24XodW2kjLG.js')\n//# sourceMappingURL=index.MEc5qI_OWTs0.js.map\n",
     contentHash: {
       _tag: 'Some',
       value: {
         type: 'hash',
-        hash: 'NWkKj7N8Hd6fN4XUw7-F0c2AOjg-X2l56lDRiAowTPZfZ2IeLLmrTCUbbeUX2Ux-7mgwzOoVGRYxmyJFqNUEhA',
+        hash: 'MEc5qI_OWTs0LyQo0UyaGfs0lf9aK1A-ar7D3blkeh3nLy089RAHuq9Ck7DbCnLXDRaMjjqniEVpLSMu_XBdHw',
       },
     },
     dependencies: [
@@ -276,10 +276,67 @@ const expected = {
           end: 29,
         },
       },
+      {
+        specifier: './sw.js',
+        filePath: 'sw.js',
+        fileExtension: '.js',
+        position: {
+          start: 153,
+          end: 160,
+        },
+      },
     ],
     sourceMap: {
       _tag: 'Some',
       value: 'index.js.map',
+    },
+    isBase64Encoded: false,
+  },
+  'standalone.tsx': {
+    filePath: 'standalone.tsx',
+    fileExtension: '.tsx',
+    contents:
+      "import * as React from 'react'\n\nexport function hello() {\n  return <span>world</span>\n}\n//# sourceMappingURL=standalone.vH8HkrOEKN9b.tsx.map\n",
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hash',
+        hash: 'vH8HkrOEKN9bhWmZAgQ9seZYkqWJKhWHdcdZiXZMvxVEpf94jrz7n2EtzDT24LcXvl5HC6C5I2Qm8RHfXpTvGA',
+      },
+    },
+    dependencies: [
+      {
+        specifier: 'react',
+        filePath: '../node_modules/react/index.js',
+        fileExtension: '.js',
+        position: {
+          start: 24,
+          end: 29,
+        },
+      },
+    ],
+    sourceMap: {
+      _tag: 'Some',
+      value: 'standalone.tsx.map',
+    },
+    isBase64Encoded: false,
+  },
+  'sw.js': {
+    filePath: 'sw.js',
+    fileExtension: '.js',
+    contents:
+      "/* eslint-disable no-undef */\n\nself.addEventListener('fetch', function (event) {\n  event.respondWith(\n    caches.match(event.request).then(function (response) {\n      // Cache hit - return response\n      if (response) {\n        return response\n      }\n      return fetch(event.request)\n    }),\n  )\n})\n//# sourceMappingURL=sw.L24XodW2kjLG.js.map\n",
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hash',
+        hash: 'L24XodW2kjLGoVadRMl6opmCs0wCw1kHe6SARybth8tts0norWLz21yy5z1zyKkX0Obrubkq-d-kVu3bcFHh1g',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'Some',
+      value: 'sw.js.map',
     },
     isBase64Encoded: false,
   },
@@ -423,16 +480,52 @@ const expected = {
     },
     isBase64Encoded: false,
   },
+  'sw.js.map': {
+    filePath: 'sw.js.map',
+    fileExtension: '.js.map',
+    contents:
+      '{\n  "version": 3,\n  "file": "sw.js",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC7B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACjD,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACpB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC1D,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACpC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACrB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACvB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACP,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACjC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACP,CAAC,CAAC,CAAC;AACH,CAAC,CAAC;",\n  "names": [],\n  "sources": [\n    "/*%20eslint-disable%20no-undef%20*/self.addEventListener(\'fetch\',%20function%20(event)%20%7B%20%20event.respondWith(%20%20%20%20caches.match(event.request).then(function%20(response)%20%7B%20%20%20%20%20%20//%20Cache%20hit%20-%20return%20response%20%20%20%20%20%20if%20(response)%20%7B%20%20%20%20%20%20%20%20return%20response%20%20%20%20%20%20%7D%20%20%20%20%20%20return%20fetch(event.request)%20%20%20%20%7D),%20%20)%7D)"\n  ],\n  "sourcesContent": [\n    "/* eslint-disable no-undef */\\n\\nself.addEventListener(\'fetch\', function (event) {\\n  event.respondWith(\\n    caches.match(event.request).then(function (response) {\\n      // Cache hit - return response\\n      if (response) {\\n        return response\\n      }\\n      return fetch(event.request)\\n    }),\\n  )\\n})\\n"\n  ]\n}',
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hashFor',
+        filePath: 'sw.js',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'None',
+    },
+    isBase64Encoded: false,
+  },
   'index.js.map': {
     filePath: 'index.js.map',
     fileExtension: '.js.map',
     contents:
-      '{\n  "version": 3,\n  "file": "index.js",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,qBAAQ,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACvB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACtB,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20%7B%20foo%20%7D%20from%20\'./foo.js\'export%20function%20bar()%20%7B%20%20return%20foo()%20+%20\'bar\'%7D"\n  ],\n  "sourcesContent": [\n    "import { foo } from \'./foo.js\'\\n\\nexport function bar() {\\n  return foo() + \'bar\'\\n}\\n"\n  ]\n}',
+      '{\n  "version": 3,\n  "file": "index.js",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,qBAAQ,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACvB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACtB,CAAC;AACD;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACpC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,oBAAO,CAAC,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20%7B%20foo%20%7D%20from%20\'./foo.js\'export%20function%20bar()%20%7B%20%20return%20foo()%20+%20\'bar\'%7D//%20eslint-disable-next-line%20no-undefnavigator.serviceWorker.register(\'./sw.js\')"\n  ],\n  "sourcesContent": [\n    "import { foo } from \'./foo.js\'\\n\\nexport function bar() {\\n  return foo() + \'bar\'\\n}\\n\\n// eslint-disable-next-line no-undef\\nnavigator.serviceWorker.register(\'./sw.js\')\\n"\n  ]\n}',
     contentHash: {
       _tag: 'Some',
       value: {
         type: 'hashFor',
         filePath: 'index.js',
+      },
+    },
+    dependencies: [],
+    sourceMap: {
+      _tag: 'None',
+    },
+    isBase64Encoded: false,
+  },
+  'standalone.tsx.map': {
+    filePath: 'standalone.tsx.map',
+    fileExtension: '.tsx.map',
+    contents:
+      '{\n  "version": 3,\n  "file": "standalone.tsx",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACzB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC3B,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20*%20as%20React%20from%20\'react\'export%20function%20hello()%20%7B%20%20return%20%3Cspan%3Eworld%3C/span%3E%7D"\n  ],\n  "sourcesContent": [\n    "import * as React from \'react\'\\n\\nexport function hello() {\\n  return <span>world</span>\\n}\\n"\n  ]\n}',
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        type: 'hashFor',
+        filePath: 'standalone.tsx',
       },
     },
     dependencies: [],
@@ -494,53 +587,6 @@ const expected = {
       _tag: 'None',
     },
     isBase64Encoded: false,
-  },
-  'standalone.tsx': {
-    contentHash: {
-      _tag: 'Some',
-      value: {
-        hash: 'vH8HkrOEKN9bhWmZAgQ9seZYkqWJKhWHdcdZiXZMvxVEpf94jrz7n2EtzDT24LcXvl5HC6C5I2Qm8RHfXpTvGA',
-        type: 'hash',
-      },
-    },
-    contents:
-      "import * as React from 'react'\n\nexport function hello() {\n  return <span>world</span>\n}\n//# sourceMappingURL=standalone.vH8HkrOEKN9b.tsx.map\n",
-    dependencies: [
-      {
-        fileExtension: '.js',
-        filePath: '../node_modules/react/index.js',
-        position: {
-          end: 29,
-          start: 24,
-        },
-        specifier: 'react',
-      },
-    ],
-    fileExtension: '.tsx',
-    filePath: 'standalone.tsx',
-    isBase64Encoded: false,
-    sourceMap: {
-      _tag: 'Some',
-      value: 'standalone.tsx.map',
-    },
-  },
-  'standalone.tsx.map': {
-    contentHash: {
-      _tag: 'Some',
-      value: {
-        filePath: 'standalone.tsx',
-        type: 'hashFor',
-      },
-    },
-    contents:
-      '{\n  "version": 3,\n  "file": "standalone.tsx",\n  "mappings": "AAAA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC9B;AACA,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AACzB,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC;AAC3B,CAAC;",\n  "names": [],\n  "sources": [\n    "import%20*%20as%20React%20from%20\'react\'export%20function%20hello()%20%7B%20%20return%20%3Cspan%3Eworld%3C/span%3E%7D"\n  ],\n  "sourcesContent": [\n    "import * as React from \'react\'\\n\\nexport function hello() {\\n  return <span>world</span>\\n}\\n"\n  ]\n}',
-    dependencies: [],
-    fileExtension: '.tsx.map',
-    filePath: 'standalone.tsx.map',
-    isBase64Encoded: false,
-    sourceMap: {
-      _tag: 'None',
-    },
   },
 }
 

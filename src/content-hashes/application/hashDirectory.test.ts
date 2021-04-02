@@ -189,7 +189,7 @@ const expected = {
     filePath: 'index.html',
     fileExtension: '.html',
     contents:
-      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app">\n\n    <img srcset="./fake-image-x4.ooKWSSJ0apZX.png 4x,\n                 ./fake-image-x3.dnonbURMTOmA.png 3x,\n                 ./fake-image-x2.ng0eXyXAgxHn.png 2x,\n                 ./fake-image-x1.G6V284hJv-PY.png 1x" />\n  </div>\n\n  <script type="module" src="./index.MEc5qI_OWTs0.js"></script>\n</body>\n\n</html>\n',
+      '<!DOCTYPE html>\n<html>\n\n<head>\n  <title>Tapas</title>\n\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <link href="./index.jPrPHrTrxlk1.css" />\n</head>\n\n<body>\n  <div id="app">\n\n    <img srcset="./fake-image-x4.ooKWSSJ0apZX.png 4x,\n                 ./fake-image-x3.dnonbURMTOmA.png 3x,\n                 ./fake-image-x2.ng0eXyXAgxHn.png 2x,\n                 ./fake-image-x1.G6V284hJv-PY.png 1x" />\n\n    <template>\n      <img src="./template-image.MqBzdgoAuSgt.png" />\n    </template>\n  </div>\n\n  <script type="module" src="./index.MEc5qI_OWTs0.js"></script>\n</body>\n\n</html>\n',
     contentHash: {
       _tag: 'None',
     },
@@ -240,12 +240,21 @@ const expected = {
         },
       },
       {
+        fileExtension: '.png',
+        filePath: 'template-image.png',
+        position: {
+          end: 411,
+          start: 391,
+        },
+        specifier: './template-image.png',
+      },
+      {
         specifier: './index.js',
         filePath: 'index.js',
         fileExtension: '.js',
         position: {
-          start: 398,
-          end: 408,
+          start: 471,
+          end: 481,
         },
       },
     ],
@@ -339,6 +348,23 @@ const expected = {
       value: 'sw.js.map',
     },
     isBase64Encoded: false,
+  },
+  'template-image.png': {
+    contentHash: {
+      _tag: 'Some',
+      value: {
+        hash: 'MqBzdgoAuSgtLMGROZhTntRzB4ex3QR4NaQzK_TbfRrChHdwpEmkqYNt0dD1gm6Zq85TdGI6tL83hREBxp0aPA',
+        type: 'hash',
+      },
+    },
+    contents: 'dGVtcGxhdGUtaW1hZ2UK',
+    dependencies: [],
+    fileExtension: '.png',
+    filePath: 'template-image.png',
+    isBase64Encoded: true,
+    sourceMap: {
+      _tag: 'None',
+    },
   },
   'test.svg': {
     filePath: 'test.svg',
@@ -590,7 +616,9 @@ const expected = {
   },
 }
 
-describe('hashDirectory', () => {
+describe('hashDirectory', function () {
+  this.timeout(5000)
+
   it('hashes a directory into a registry', function (done) {
     const test = doEffect(function* () {
       try {

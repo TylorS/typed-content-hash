@@ -21,6 +21,7 @@ export type HtmlAst = {
   readonly tagName: string
   readonly attributes: readonly HtmlAttribute[]
   readonly children?: readonly HtmlAst[]
+  readonly content?: string
   readonly position: {
     readonly start: {
       readonly index: number
@@ -141,6 +142,18 @@ function isValidDependency(buildDirectory: string, directory: string, mainFields
     }
 
     const tagName = ast.tagName.toLowerCase()
+
+    if (tagName === 'template' && !!ast.children?.[0].content) {
+      const child = ast.children[0]
+      const start = child.position.start.index
+      const content = child.content!
+      const childAst = parse(content, { ...parseDefaults, includePositions: true })
+
+      return childAst
+        .map(astToTree)
+        .flatMap(foldDependencies(isValidDependency(buildDirectory, directory, mainFields, content)))
+        .map((d) => ({ ...d, position: { start: d.position.start + start, end: d.position.end + start } }))
+    }
 
     if (!(tagName in searchMap)) {
       return []

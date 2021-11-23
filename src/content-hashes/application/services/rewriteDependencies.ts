@@ -1,12 +1,11 @@
-import { Effect, EnvOf } from '@typed/fp'
+import { Env, op, RequirementsOf } from '@typed/fp/Env'
 
 import { Document } from '../../domain/model'
 import { DocumentRegistry, DocumentRegistryEnv } from '../model'
-import { op } from './common'
 import { LoggerEnv } from './logging'
 
 export const rewriteDependencies = op<
-  (documents: ReadonlyArray<Document>) => Effect<LoggerEnv & DocumentRegistryEnv, DocumentRegistry>
+  (documents: ReadonlyArray<Document>) => Env<LoggerEnv & DocumentRegistryEnv, DocumentRegistry>
 >()('rewriteDependencies')
 
-export type RewriteDependenciesEnv = EnvOf<typeof rewriteDependencies>
+export type RewriteDependenciesEnv = RequirementsOf<typeof rewriteDependencies>

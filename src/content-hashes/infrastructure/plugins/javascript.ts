@@ -1,13 +1,13 @@
-import { deepEqualsEq, doEffect, isNotUndefined, map, memoize, Pure, zip } from '@typed/fp'
+import * as E from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
 import builtinModules from 'builtin-modules'
-import { Eq, eqString, getStructEq, getTupleEq } from 'fp-ts/lib/Eq'
-import { pipe } from 'fp-ts/lib/function'
-import { isSome, map as mapOption, none, some } from 'fp-ts/lib/Option'
-import { getEq, uniq } from 'fp-ts/lib/ReadonlyArray'
+import { pipe } from 'fp-ts/function'
+import { isSome, map as mapOption, none, some } from 'fp-ts/Option'
+import { uniq } from 'fp-ts/ReadonlyArray'
 import { basename, dirname } from 'path'
-import { CompilerOptions, Project, SourceFile, StringLiteral } from 'ts-morph'
+import { CompilerOptions, Project, SourceFile, StringLiteral, SyntaxKind } from 'ts-morph'
 import { red, yellow } from 'typed-colors'
-import { getDefaultCompilerOptions, SyntaxKind } from 'typescript'
+import { getDefaultCompilerOptions } from 'typescript'
 
 import { debug } from '../../application/services/logging'
 import { Dependency, Document } from '../../domain/model'
@@ -22,18 +22,6 @@ import { resolvePathFromSourceFile } from './resolvePathFromSourceFile'
 import { createResolveTsConfigPaths, TsConfigPathsResolver } from './resolveTsConfigPaths'
 
 const specifiersToSkip = [...builtinModules, 'tslib']
-
-const resolvePath = memoize(
-  getTupleEq(
-    getStructEq({
-      moduleSpecifier: eqString,
-      directory: eqString,
-      pathsResolver: deepEqualsEq as Eq<TsConfigPathsResolver>,
-      extensions: getEq(eqString),
-      mainFields: getEq(eqString),
-    }),
-  ),
-)(resolvePathFromSourceFile)
 
 export type JavascriptPluginOptions = {
   readonly compilerOptions?: CompilerOptions
@@ -85,7 +73,7 @@ const getProxyReplacementExt = (ext: string): string => {
 }
 
 export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPlugin => {
-  const { compilerOptions = getDefaultCompilerOptions(), mainFields = MAIN_FIELDS } = options
+  const { compilerOptions = getDefaultCompilerOptions() as CompilerOptions, mainFields = MAIN_FIELDS } = options
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
     compilerOptions: { ...compilerOptions, allowJs: true },
@@ -96,11 +84,11 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
 
   const javascript: HashPlugin = {
     readFilePath: (filePath: string) =>
-      doEffect(function* () {
+      Do(function* (_) {
         const ext = getFileExtension(filePath)
 
         if (!supportedExtensions.some((se) => ext.endsWith(se))) {
-          yield* debug(`${red(`[JS]`)} Unsupported file extension ${filePath}`)
+          yield* _(debug(`${red(`[JS]`)} Unsupported file extension ${filePath}`))
 
           return none
         }
@@ -108,16 +96,16 @@ export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPl
         const shouldUseHashFor = multiSeparatedExtensions.some((se) => ext.endsWith(se))
         const isProxyJs = ext.endsWith('.proxy.js')
 
-        yield* debug(`${yellow(`[JS]`)} Reading ${filePath}...`)
+        yield* _(debug(`${yellow(`[JS]`)} Reading ${filePath}...`))
 
-        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: !isProxyJs, isBase64Encoded: false })
+        const initial = yield* _(fsReadFile(filePath, { supportsSourceMaps: !isProxyJs, isBase64Encoded: false }))
         const document = shouldUseHashFor
           ? getHashFor(initial, isProxyJs ? getProxyReplacementExt(ext) : '.js')
           : initial
 
-        yield* debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`)
+        yield* _(debug(`${yellow(`[JS]`)} Finding dependencies ${filePath}...`))
 
-        return some(yield* findDependencies(project, pathsResolver, mainFields, document))
+        return some(yield* _(findDependencies(project, pathsResolver, mainFields, document)))
       }),
   }
 
@@ -129,7 +117,7 @@ function findDependencies(
   pathsResolver: TsConfigPathsResolver,
   mainFields: readonly string[],
   document: Document,
-): Pure<Document> {
+): E.Env<unknown, Document> {
   const contents = document.contents
   const sourceFile = project.getSourceFile(document.filePath) || project.createSourceFile(document.filePath, contents)
 
@@ -142,7 +130,7 @@ function findDependencies(
     ...sourceFile
       .getExportDeclarations()
       .map((d) => d.getModuleSpecifier())
-      .filter(isNotUndefined),
+      .filter((x): x is Exclude<typeof x, undefined> => x !== undefined),
     ...(hasServiceWorkerRegister ? findServiceWorkerRegister(sourceFile) : []),
   ]
 
@@ -163,18 +151,18 @@ function findDependencies(
       const moduleSpecifier = useBaseName ? ensureRelative(basename(specifier)) : specifier
 
       if (specifiersToSkip.includes(moduleSpecifier)) {
-        return Pure.of(none)
+        return E.of(none)
       }
 
       return pipe(
-        resolvePath({
+        resolvePathFromSourceFile({
           moduleSpecifier,
           directory: dirname(sourceFilePath),
           pathsResolver,
           extensions: getExtensions(extension),
           mainFields,
         }),
-        map(
+        E.map(
           mapOption((filePath) => {
             const start = literal.getStart() + 1
             const end = literal.getEnd() - 1
@@ -189,8 +177,8 @@ function findDependencies(
         ),
       )
     }),
-    zip,
-    map(
+    E.zip,
+    E.map(
       (dependencies): Document => ({
         ...document,
         dependencies: pipe(

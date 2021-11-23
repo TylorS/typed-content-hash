@@ -1,4 +1,5 @@
-import { ask, doEffect, Effect, LoggerEffect } from '@typed/fp'
+import { ask, Env } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
 import * as colors from 'typed-colors'
 import * as figures from 'typed-figures'
 
@@ -11,7 +12,7 @@ export enum LogLevel {
 export interface LoggerEnv {
   readonly logPrefix: string
   readonly logLevel: LogLevel
-  readonly logger: LoggerEffect<unknown, string>
+  readonly logger: (message: string) => Env<unknown, void>
 }
 
 export interface LogEntry {
@@ -52,16 +53,18 @@ export const levelToTextColor = (level: LogLevel, message: string): string => {
   }
 }
 
-export function logEntry(entry: LogEntry): Effect<LoggerEnv, void> {
-  const eff = doEffect(function* () {
-    const { logLevel, logger, logPrefix } = yield* ask<LoggerEnv>()
+export function logEntry(entry: LogEntry): Env<LoggerEnv, void> {
+  const eff = Do(function* (_) {
+    const { logLevel, logger, logPrefix } = yield* _(ask<LoggerEnv>())
 
     if (logLevel <= entry.level) {
-      yield* logger(
-        `${logPrefix} ${levelToIconColor(entry.level, levelToIcon(entry.level))} ${levelToTextColor(
-          entry.level,
-          entry.message,
-        )}`.trim(),
+      yield* _(
+        logger(
+          `${logPrefix} ${levelToIconColor(entry.level, levelToIcon(entry.level))} ${levelToTextColor(
+            entry.level,
+            entry.message,
+          )}`.trim(),
+        ),
       )
     }
   })

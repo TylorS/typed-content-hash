@@ -1,4 +1,4 @@
-import { Option } from 'fp-ts/lib/Option'
+import { Option } from 'fp-ts/Option'
 
 export interface Document {
   readonly filePath: string

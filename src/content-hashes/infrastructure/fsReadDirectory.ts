@@ -1,4 +1,5 @@
-import { doEffect, Effect, fromTask, zip } from '@typed/fp'
+import { Env, fromTask, zip } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
 import { promises, statSync } from 'fs'
 import { join } from 'path'
 
@@ -10,13 +11,13 @@ const readdir = (directory: string) =>
 const isFile = (path: string) => statSync(path).isFile()
 const isDirectory = (path: string) => statSync(path).isDirectory()
 
-export const fsReadDirectory = (directory: string): Effect<LoggerEnv, readonly string[]> =>
-  doEffect(function* () {
-    yield* debug(`Reading Directory ${directory}...`)
+export const fsReadDirectory = (directory: string): Env<LoggerEnv, readonly string[]> =>
+  Do(function* (_) {
+    yield* _(debug(`Reading Directory ${directory}...`))
 
-    const paths = yield* readdir(directory)
+    const paths = yield* _(readdir(directory))
     const files = paths.filter(isFile)
-    const directories: ReadonlyArray<readonly string[]> = yield* zip(paths.filter(isDirectory).map(fsReadDirectory))
+    const directories: ReadonlyArray<readonly string[]> = yield* _(zip(paths.filter(isDirectory).map(fsReadDirectory)))
 
     return [...files, ...directories.flat()]
   })

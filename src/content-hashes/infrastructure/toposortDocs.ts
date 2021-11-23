@@ -1,25 +1,25 @@
-import { doEffect, Effect } from '@typed/fp'
-import { DependencyMap, fromDependencyMap, getStronglyConnectedComponents } from '@typed/fp/DiGraph/exports'
-import { pipe } from 'fp-ts/lib/function'
-import { fromNullable, isNone } from 'fp-ts/lib/Option'
-import { contramap as contraOrd, ordNumber } from 'fp-ts/lib/Ord'
-import { compact, map, sort } from 'fp-ts/lib/ReadonlyArray'
+import { Env } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
+import { pipe } from 'fp-ts/function'
+import { Ord } from 'fp-ts/number'
+import { fromNullable, isNone } from 'fp-ts/Option'
+import { contramap as contraOrd } from 'fp-ts/Ord'
+import { compact, map, sort } from 'fp-ts/ReadonlyArray'
 
 import { debug, LoggerEnv } from '../application/services/logging'
 import { Document } from '../domain/model'
+import { DependencyMap, fromDependencyMap, getStronglyConnectedComponents } from './DiGraph'
 
 const sortDocuments = pipe(
-  ordNumber,
+  Ord,
   // Ensure that files that require hashes are included first for those that do not but might be rewritten with them.
   contraOrd((d: Document) => (isNone(d.contentHash) ? 1 : d.contentHash.value.type === 'hashFor' ? 2 : 0)),
   sort,
 )
 
-export const sortDiGraph = (
-  documents: readonly Document[],
-): Effect<LoggerEnv, ReadonlyArray<ReadonlyArray<Document>>> =>
-  doEffect(function* () {
-    yield* debug(`Sorting documents...`)
+export const sortDiGraph = (documents: readonly Document[]): Env<LoggerEnv, ReadonlyArray<ReadonlyArray<Document>>> =>
+  Do(function* (_) {
+    yield* _(debug(`Sorting documents...`))
 
     const docsByPath = new Map(documents.map((d) => [d.filePath, d] as const))
 

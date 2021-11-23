@@ -1,9 +1,8 @@
-import { Effect, EnvOf } from '@typed/fp'
+import { Env, op, RequirementsOf } from '@typed/fp/Env'
 
 import { DocumentRegistry } from '../model'
-import { op } from './common'
 import { LoggerEnv } from './logging'
 
-export const writeDocuments = op<(documents: DocumentRegistry) => Effect<LoggerEnv, void>>()('writeDocuments')
+export const writeDocuments = op<(documents: DocumentRegistry) => Env<LoggerEnv, void>>()('writeDocuments')
 
-export type WriteDocumentsEnv = EnvOf<typeof writeDocuments>
+export type WriteDocumentsEnv = RequirementsOf<typeof writeDocuments>

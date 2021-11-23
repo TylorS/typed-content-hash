@@ -1,5 +1,6 @@
 import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
-import { doEffect, fromTask, zip } from '@typed/fp'
+import { fromTask, zip } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
 import { existsSync, promises } from 'fs'
 import { basename } from 'path'
 
@@ -16,31 +17,33 @@ const sourceMapExt = '.map'
 const sourceMapExtRegex = new RegExp(`${sourceMapExt}$`)
 
 export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number) => {
-  const eff = doEffect(function* () {
-    yield* debug(`Writing registry...`)
+  const eff = Do(function* (_) {
+    yield* _(debug(`Writing registry...`))
 
-    yield* zip(
-      Array.from(registry.values()).map((document) =>
-        doEffect(function* () {
-          const hashedPath = getHashedPath(document, registry, hashLength)
-          const pathChanged = document.filePath !== hashedPath
+    yield* _(
+      zip(
+        Array.from(registry.values()).map((document) =>
+          Do(function* (_) {
+            const hashedPath = getHashedPath(document, registry, hashLength)
+            const pathChanged = document.filePath !== hashedPath
 
-          if (hashedPath.endsWith(sourceMapExt) && pathChanged) {
-            document = yield* tryToRewriteFilename(document, hashedPath)
-          }
+            if (hashedPath.endsWith(sourceMapExt) && pathChanged) {
+              document = yield* _(tryToRewriteFilename(document, hashedPath))
+            }
 
-          if (!document.isBase64Encoded && pathChanged && existsSync(document.filePath)) {
-            yield* unlinkFile(document.filePath)
-          }
+            if (!document.isBase64Encoded && pathChanged && existsSync(document.filePath)) {
+              yield* _(unlinkFile(document.filePath))
+            }
 
-          if (!document.isBase64Encoded) {
-            yield* writeFile(hashedPath, document.contents)
-          }
+            if (!document.isBase64Encoded) {
+              yield* _(writeFile(hashedPath, document.contents))
+            }
 
-          if (document.isBase64Encoded && pathChanged) {
-            yield* rename(document.filePath, hashedPath)
-          }
-        }),
+            if (document.isBase64Encoded && pathChanged) {
+              yield* _(rename(document.filePath, hashedPath))
+            }
+          }),
+        ),
       ),
     )
   })
@@ -49,7 +52,7 @@ export const fsWriteDocuments = (registry: DocumentRegistry, hashLength: number)
 }
 
 function tryToRewriteFilename(document: Document, hashedPath: string) {
-  return doEffect(function* () {
+  return Do(function* (_) {
     try {
       const raw = JSON.parse(document.contents) as RawSourceMap
 
@@ -62,7 +65,7 @@ function tryToRewriteFilename(document: Document, hashedPath: string) {
         contents: JSON.stringify({ ...raw, file: replaceHash(basename(document.filePath), extension, hash) }, null, 2),
       }
     } catch (error) {
-      yield* info(`Unable to rewrite sourceMap file name for ${document.filePath}`)
+      yield* _(info(`Unable to rewrite sourceMap file name for ${document.filePath}`))
 
       return document
     }

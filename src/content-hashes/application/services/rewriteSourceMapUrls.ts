@@ -1,11 +1,10 @@
-import { Effect, EnvOf } from '@typed/fp'
+import { Env, op, RequirementsOf } from '@typed/fp/Env'
 
 import { DocumentRegistry, DocumentRegistryEnv } from '../model'
-import { op } from './common'
 import { LoggerEnv } from './logging'
 
-export const rewriteSourceMapUrls = op<() => Effect<LoggerEnv & DocumentRegistryEnv, DocumentRegistry>>()(
+export const rewriteSourceMapUrls = op<() => Env<LoggerEnv & DocumentRegistryEnv, DocumentRegistry>>()(
   'rewriteSourceMapUrls',
 )()
 
-export type RewriteSourceMapUrlsEnv = EnvOf<typeof rewriteSourceMapUrls>
+export type RewriteSourceMapUrlsEnv = RequirementsOf<typeof rewriteSourceMapUrls>

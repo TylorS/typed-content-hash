@@ -1,9 +1,9 @@
-import { Effect } from '@typed/fp'
-import { Option } from 'fp-ts/lib/Option'
+import { Env } from '@typed/fp/Env'
+import { Option } from 'fp-ts/Option'
 
 import { LoggerEnv } from '../application/services/logging'
 import { Document } from '../domain/model'
 
 export interface HashPlugin {
-  readonly readFilePath: (filePath: string) => Effect<LoggerEnv, Option<Document>>
+  readonly readFilePath: (filePath: string) => Env<LoggerEnv, Option<Document>>
 }

@@ -1,12 +1,11 @@
-import { Effect, EnvOf } from '@typed/fp'
+import { Env, op, RequirementsOf } from '@typed/fp/Env'
 
 import { AssetManifest } from '../../domain/model'
 import { DocumentRegistry } from '../model'
-import { op } from './common'
 import { LoggerEnv } from './logging'
 
-export const generateAssetManifest = op<(registry: DocumentRegistry) => Effect<LoggerEnv, AssetManifest>>()(
+export const generateAssetManifest = op<(registry: DocumentRegistry) => Env<LoggerEnv, AssetManifest>>()(
   'generateAssetManifest',
 )
 
-export type GenerateAssetManifestEnv = EnvOf<typeof generateAssetManifest>
+export type GenerateAssetManifestEnv = RequirementsOf<typeof generateAssetManifest>

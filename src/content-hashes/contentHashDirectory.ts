@@ -1,6 +1,9 @@
-import { doEffect, log, provideAll, provideSome, toPromise } from '@typed/fp'
-import { pipe } from 'fp-ts/lib/function'
-import { isNone, isSome, none, Option, some } from 'fp-ts/lib/Option'
+import { undisposable } from '@typed/fp/Disposable'
+import { fromIO, provideAll, provideSome } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
+import { run } from '@typed/fp/Resume'
+import { pipe } from 'fp-ts/function'
+import { isNone, isSome, none, Option, some } from 'fp-ts/Option'
 import { resolve } from 'path'
 import { gray } from 'typed-colors'
 
@@ -64,11 +67,18 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
 
   const readFilePath = createReadFilePath(plugins)
   const documentRegistryEnv: DocumentRegistryEnv = { documentRegistry }
-  const loggerEnv: LoggerEnv = { logLevel, logPrefix, logger: (msg: string) => pipe(msg, log, provideAll({ console })) }
+  const loggerEnv: LoggerEnv = {
+    logLevel,
+    logPrefix,
+    logger: (msg: string) =>
+      fromIO(() => {
+        console.log(msg)
+      }),
+  }
 
-  const program = doEffect(function* () {
-    const registry = yield* hashDirectory(directory)
-    const assetManifiestJson = yield* generateAssetManifest(registry)
+  const program = Do(function* (_) {
+    const registry = yield* _(hashDirectory(directory))
+    const assetManifiestJson = yield* _(generateAssetManifest(registry))
     const filePath = resolve(directory, assetManifest)
     const assetManifiestDoc: Document = {
       filePath: filePath,
@@ -95,20 +105,20 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
       })
     }
 
-    yield* writeDocuments(toWrite)
+    yield* _(writeDocuments(toWrite))
 
     return registry
   })
 
-  return pipe(
+  const env = pipe(
     program,
     provideAll({
       ...documentRegistryEnv,
       ...loggerEnv,
       readDirectory: fsReadDirectory,
       readDependencies: (directory, doc) =>
-        doEffect(function* () {
-          const documents = yield* fsReadDependencies(directory, doc)
+        Do(function* (_) {
+          const documents = yield* _(fsReadDependencies(directory, doc))
 
           if (sourceMaps) {
             return documents
@@ -121,8 +131,8 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
         }),
       sortDocuments: sortDiGraph,
       readFilePath: (path) =>
-        doEffect(function* () {
-          const doc = yield* readFilePath(path)
+        Do(function* (_) {
+          const doc = yield* _(readFilePath(path))
 
           if (sourceMaps || isNone(doc)) {
             return doc
@@ -144,8 +154,9 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
       generateAssetManifest: (doc) => generateAssetManfiestFromRegistry(directory, doc, hashLength, baseUrl),
       writeDocuments: (docs) => fsWriteDocuments(docs, hashLength),
     }),
-    toPromise,
   )
+
+  return new Promise((resolve) => run(undisposable(resolve))(env({})))
 }
 
 function removeSourceMaps(doc: Document): Option<Document> {

@@ -1,7 +1,7 @@
-import { doEffect } from '@typed/fp'
-import { isSome, none, some } from 'fp-ts/lib/Option'
-import { getMonoid } from 'fp-ts/lib/ReadonlyArray'
-import { foldMap, Tree } from 'fp-ts/lib/Tree'
+import { Do } from '@typed/fp/FxEnv'
+import { isSome, none, some } from 'fp-ts/Option'
+import { getMonoid } from 'fp-ts/ReadonlyArray'
+import { foldMap, Tree } from 'fp-ts/Tree'
 import { dirname, extname, relative, resolve } from 'path'
 import { red, yellow } from 'typed-colors'
 
@@ -96,18 +96,18 @@ export interface HtmlPuginOptions {
 export function createHtmlPlugin({ buildDirectory, mainFields = MAIN_FIELDS }: HtmlPuginOptions): HashPlugin {
   const html: HashPlugin = {
     readFilePath: (filePath) =>
-      doEffect(function* () {
+      Do(function* (_) {
         const ext = getFileExtension(filePath)
 
         if (!supportedFileExtension.includes(ext)) {
-          yield* debug(`${red(`[HTML]`)} Unsupported file extension ${filePath}`)
+          yield* _(debug(`${red(`[HTML]`)} Unsupported file extension ${filePath}`))
 
           return none
         }
 
-        yield* debug(`${yellow(`[HTML]`)} Reading ${filePath}...`)
-        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: false, isBase64Encoded: false })
-        yield* debug(`${yellow(`[HTML]`)} Finding Dependencies ${filePath}...`)
+        yield* _(debug(`${yellow(`[HTML]`)} Reading ${filePath}...`))
+        const initial = yield* _(fsReadFile(filePath, { supportsSourceMaps: false, isBase64Encoded: false }))
+        yield* _(debug(`${yellow(`[HTML]`)} Finding Dependencies ${filePath}...`))
 
         const document: Document = findDependencies(initial, buildDirectory, mainFields)
 

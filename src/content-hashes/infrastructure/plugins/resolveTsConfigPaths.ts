@@ -1,5 +1,5 @@
-import { constant, constFalse, pipe } from 'fp-ts/lib/function'
-import { fromNullable, none, Option } from 'fp-ts/lib/Option'
+import { constant, constFalse, pipe } from 'fp-ts/function'
+import { fromNullable, none, Option } from 'fp-ts/Option'
 import { CompilerOptions } from 'ts-morph'
 import { createMatchPath } from 'tsconfig-paths'
 

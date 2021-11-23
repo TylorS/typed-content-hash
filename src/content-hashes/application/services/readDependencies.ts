@@ -1,12 +1,11 @@
-import { Effect, EnvOf } from '@typed/fp'
+import { Env, op, RequirementsOf } from '@typed/fp/Env'
 
 import { Document } from '../../domain/model'
 import { DocumentRegistryEnv } from '../model'
-import { op } from './common'
 import { LoggerEnv } from './logging'
 
 export const readDependencies = op<
-  (directory: string, document: Document) => Effect<LoggerEnv & DocumentRegistryEnv, readonly Document[]>
+  (directory: string, document: Document) => Env<LoggerEnv & DocumentRegistryEnv, readonly Document[]>
 >()('readDependencies')
 
-export type ReadDependenciesEnv = EnvOf<typeof readDependencies>
+export type ReadDependenciesEnv = RequirementsOf<typeof readDependencies>

@@ -1,8 +1,9 @@
-import { ask, doEffect, Effect, useSome } from '@typed/fp'
+import { ask, Env, useSome } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
 import base64url from 'base64url'
 import { createHash } from 'crypto'
-import { pipe } from 'fp-ts/lib/function'
-import { getOrElse, isSome, some } from 'fp-ts/lib/Option'
+import { pipe } from 'fp-ts/function'
+import { getOrElse, isSome, some } from 'fp-ts/Option'
 import MagicString from 'magic-string'
 import { dirname, relative } from 'path'
 
@@ -27,30 +28,32 @@ export type RewriteDependenciesImplementationEnv = {
 
 export const rewriteDependencies = (
   documents: ReadonlyArray<Document>,
-): Effect<DocumentRegistryEnv & LoggerEnv & RewriteDependenciesImplementationEnv, DocumentRegistry> =>
-  doEffect(function* () {
-    const env = yield* ask<RewriteDependenciesImplementationEnv & DocumentRegistryEnv>()
+): Env<DocumentRegistryEnv & LoggerEnv & RewriteDependenciesImplementationEnv, DocumentRegistry> =>
+  Do(function* (_) {
+    const env = yield* _(ask<RewriteDependenciesImplementationEnv & DocumentRegistryEnv>())
     const computedHashes = computeContentHashes(documents, env.documentRegistry, env.hashLength)
 
     let documentRegistry = env.documentRegistry
     for (const document of documents) {
       const { filePath } = document
 
-      yield* debug(`Rewriting dependencies ${filePath}...`)
+      yield* _(debug(`Rewriting dependencies ${filePath}...`))
 
       const hasComputedHash = computedHashes.has(filePath)
       const updatedDocument: Document = hasComputedHash
         ? { ...document, contentHash: some({ type: 'hash', hash: computedHashes.get(filePath)! }) }
         : document
 
-      documentRegistry = yield* pipe(
-        rewriteDocumentContents(
-          updatedDocument,
-          rewriteDocumentDependencies(updatedDocument, computedHashes, env),
-          env.sourceMaps,
-          hasComputedHash,
+      documentRegistry = yield* _(
+        pipe(
+          rewriteDocumentContents(
+            updatedDocument,
+            rewriteDocumentDependencies(updatedDocument, computedHashes, env),
+            env.sourceMaps,
+            hasComputedHash,
+          ),
+          useSome<DocumentRegistryEnv>({ documentRegistry }),
         ),
-        useSome({ documentRegistry }),
       )
     }
 

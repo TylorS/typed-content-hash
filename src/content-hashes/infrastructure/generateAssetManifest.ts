@@ -1,4 +1,4 @@
-import { doEffect } from '@typed/fp'
+import { Do } from '@typed/fp/FxEnv'
 import { relative } from 'path'
 
 import { DocumentRegistry } from '../application/model'
@@ -13,8 +13,8 @@ export const generateAssetManfiestFromRegistry = (
   hashLength: number,
   baseUrl?: string,
 ) =>
-  doEffect(function* () {
-    yield* info(`Generating Asset Manifest...`)
+  Do(function* (_) {
+    yield* _(info(`Generating Asset Manifest...`))
 
     const manifest: Record<string, string> = {}
 

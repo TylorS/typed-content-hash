@@ -1,6 +1,6 @@
-import { cond, doEffect } from '@typed/fp'
+import { Do } from '@typed/fp/FxEnv'
 import { Atrule, CssNode, parse, Url, walk } from 'css-tree'
-import { none, some } from 'fp-ts/lib/Option'
+import { none, some } from 'fp-ts/Option'
 import { basename, dirname } from 'path'
 import { red, yellow } from 'typed-colors'
 
@@ -27,24 +27,24 @@ export type CssPluginOptions = {
 export function createCssPlugin({ mainFields = MAIN_FIELDS }: CssPluginOptions): HashPlugin {
   const css: HashPlugin = {
     readFilePath: (filePath) =>
-      doEffect(function* () {
+      Do(function* (_) {
         const ext = getFileExtension(filePath)
 
         if (!supportedExtensions.includes(ext)) {
-          yield* debug(`${red(`[CSS]`)} Unsupported file extension ${filePath}`)
+          yield* _(debug(`${red(`[CSS]`)} Unsupported file extension ${filePath}`))
 
           return none
         }
 
-        yield* debug(`${yellow(`[CSS]`)} Reading ${filePath}...`)
-        const initial = yield* fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false })
+        yield* _(debug(`${yellow(`[CSS]`)} Reading ${filePath}...`))
+        const initial = yield* _(fsReadFile(filePath, { supportsSourceMaps: true, isBase64Encoded: false }))
 
         // Map files should just get setup with appropriate hashes
         if (ext === sourceMapExt) {
           return some(getHashFor(initial, '.css'))
         }
 
-        yield* debug(`${yellow(`[CSS]`)} Finding dependencies ${filePath}...`)
+        yield* _(debug(`${yellow(`[CSS]`)} Finding dependencies ${filePath}...`))
 
         return some(findDependencies(initial, mainFields))
       }),
@@ -58,15 +58,17 @@ function findDependencies(document: Document, mainFields: readonly string[]): Do
   const ast = parse(document.contents, { filename, positions: true })
   const dependencies = new Set<Dependency>()
 
-  walk(ast, (node) =>
-    cond(
-      [
-        cond.create(isAtRule, (node) => parseAtRule(document.filePath, node, dependencies, mainFields)),
-        cond.create(isUrl, (node) => parseUrl(document.filePath, node, dependencies, mainFields)),
-      ],
-      node,
-    ),
-  )
+  walk(ast, (node) => {
+    if (isAtRule(node)) {
+      return parseAtRule(document.filePath, node, dependencies, mainFields)
+    }
+
+    if (isUrl(node)) {
+      return parseUrl(document.filePath, node, dependencies, mainFields)
+    }
+
+    return node
+  })
 
   return { ...document, dependencies: Array.from(dependencies) }
 }

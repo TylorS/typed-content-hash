@@ -1,4 +1,4 @@
-import { none, Option, some } from 'fp-ts/lib/Option'
+import { none, Option, some } from 'fp-ts/Option'
 import * as fs from 'fs'
 import { basename, dirname, resolve } from 'path'
 import { sync as nodeResolve } from 'resolve'

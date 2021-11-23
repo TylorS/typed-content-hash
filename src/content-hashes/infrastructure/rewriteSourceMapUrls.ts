@@ -1,6 +1,7 @@
-import { ask, doEffect, Effect, useSome } from '@typed/fp'
-import { pipe } from 'fp-ts/lib/function'
-import { isSome } from 'fp-ts/lib/Option'
+import { ask, Env, useSome } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
+import { pipe } from 'fp-ts/function'
+import { isSome } from 'fp-ts/Option'
 
 import { DocumentRegistry, DocumentRegistryEnv } from '../application/model'
 import { debug, LoggerEnv } from '../application/services/logging'
@@ -11,24 +12,26 @@ import { rewriteSourceMapUrl } from './rewriteSourceMapUrl'
 export const rewriteSourceMapUrls = (
   hashLength: number,
   sourceMaps: boolean,
-): Effect<DocumentRegistryEnv & LoggerEnv, DocumentRegistry> =>
-  doEffect(function* () {
-    yield* debug(`Rewriting source-map URLs...`)
+): Env<DocumentRegistryEnv & LoggerEnv, DocumentRegistry> =>
+  Do(function* (_) {
+    yield* _(debug(`Rewriting source-map URLs...`))
 
-    const env = yield* ask<DocumentRegistryEnv>()
+    const env = yield* _(ask<DocumentRegistryEnv>())
 
     let documentRegistry = env.documentRegistry
 
     for (const document of documentRegistry.values()) {
       if (isSome(document.sourceMap)) {
-        documentRegistry = yield* pipe(
-          rewriteDocumentContents(
-            document,
-            (ms) => rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
-            sourceMaps,
-            true,
+        documentRegistry = yield* _(
+          pipe(
+            rewriteDocumentContents(
+              document,
+              (ms) => rewriteSourceMapUrl(ms, getHashedPath(document, documentRegistry, hashLength)),
+              sourceMaps,
+              true,
+            ),
+            useSome<DocumentRegistryEnv>({ documentRegistry }),
           ),
-          useSome<DocumentRegistryEnv>({ documentRegistry }),
         )
       }
     }

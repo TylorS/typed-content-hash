@@ -1,4 +1,4 @@
-import { some } from 'fp-ts/lib/Option'
+import { some } from 'fp-ts/Option'
 
 import { Document } from '../../domain/model'
 

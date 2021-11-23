@@ -1,5 +1,6 @@
-import { doEffect, fromTask } from '@typed/fp'
-import { none, some } from 'fp-ts/lib/Option'
+import { fromTask } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
+import { none, some } from 'fp-ts/Option'
 import { promises } from 'fs'
 
 import { debug } from '../application/services/logging'
@@ -16,11 +17,13 @@ const sourceMapExt = '.map'
 const proxyJsExt = '.proxy.js'
 
 export const fsReadFile = (filePath: string, options: ReadFileOptions) =>
-  doEffect(function* () {
-    yield* debug(`Reading file ${filePath}...`)
+  Do(function* (_) {
+    yield* _(debug(`Reading file ${filePath}...`))
 
-    const contents: string = yield* fromTask(() =>
-      promises.readFile(filePath).then((b) => (options.isBase64Encoded ? b.toString('base64') : b.toString())),
+    const contents: string = yield* _(
+      fromTask(() =>
+        promises.readFile(filePath).then((b) => (options.isBase64Encoded ? b.toString('base64') : b.toString())),
+      ),
     )
     const fileExtension = getFileExtension(filePath)
     const skipSourceMap =

@@ -1,6 +1,7 @@
-import { doEffect, execPure, log, provideAll, provideSome } from '@typed/fp'
+import { execWith, fromIO, provideSome, useSome } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
 import { deepStrictEqual } from 'assert'
-import { pipe } from 'fp-ts/lib/function'
+import { pipe } from 'fp-ts/function'
 import { join } from 'path'
 
 import {
@@ -17,6 +18,12 @@ import { normalizeRegistry } from '../infrastructure/normalizeRegistry'
 import { hashDirectory } from './hashDirectory'
 import { DocumentRegistryEnv } from './model'
 import { LoggerEnv, LogLevel } from './services'
+import { ReadDependenciesEnv } from './services/readDependencies'
+import { ReadDirectoryEnv } from './services/readDirectory'
+import { ReadFilePathEnv } from './services/readFilePath'
+import { RewriteDependenciesEnv } from './services/rewriteDependencies'
+import { RewriteSourceMapUrlsEnv } from './services/rewriteSourceMapUrls'
+import { SortDocumentsEnv } from './services/toposortDocuments'
 
 const testDirectory = join(__dirname, '../../../test')
 
@@ -620,9 +627,9 @@ describe('hashDirectory', function () {
   this.timeout(5000)
 
   it('hashes a directory into a registry', function (done) {
-    const test = doEffect(function* () {
+    const test = Do(function* (_) {
       try {
-        const registry = yield* hashDirectory(testDirectory)
+        const registry = yield* _(hashDirectory(testDirectory))
         const normalizedRegistry = normalizeRegistry(testDirectory, registry)
 
         deepStrictEqual(normalizedRegistry, expected)
@@ -637,31 +644,51 @@ describe('hashDirectory', function () {
     const loggerEnv: LoggerEnv = {
       logLevel: LogLevel.Debug,
       logPrefix: 'test',
-      logger: (msg: string) => pipe(msg, log, provideAll({ console })),
+      logger: (msg: string) =>
+        fromIO(() => {
+          console.log(msg)
+        }),
     }
     const hashLength = 12
 
     pipe(
       test,
-      provideAll({
-        ...documentRegistryEnv,
+      provideSome<ReadFilePathEnv>({
         ...loggerEnv,
         readFilePath,
+      }),
+      provideSome<ReadDirectoryEnv>({
+        ...loggerEnv,
         readDirectory: fsReadDirectory,
+      }),
+      provideSome<ReadDependenciesEnv>({
+        ...documentRegistryEnv,
+        ...loggerEnv,
         readDependencies: fsReadDependencies,
+      }),
+      provideSome<SortDocumentsEnv>({
+        ...loggerEnv,
         sortDocuments: sortDiGraph,
+      }),
+      provideSome<RewriteSourceMapUrlsEnv>({
+        ...documentRegistryEnv,
+        ...loggerEnv,
         rewriteSourceMapUrls: () => rewriteSourceMapUrls(hashLength, true),
-        rewriteDependencies: (...args) =>
+      }),
+      provideSome<RewriteDependenciesEnv>({
+        ...documentRegistryEnv,
+        ...loggerEnv,
+        rewriteDependencies: (documents) =>
           pipe(
-            rewriteDependencies(...args),
-            provideSome<RewriteDependenciesImplementationEnv>({
+            rewriteDependencies(documents),
+            useSome<RewriteDependenciesImplementationEnv>({
               hashLength,
               directory: testDirectory,
               sourceMaps: true,
             }),
           ),
       }),
-      execPure,
+      execWith({}),
     )
   })
 })

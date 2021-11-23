@@ -1,7 +1,8 @@
 import remapping from '@ampproject/remapping'
-import { ask, doEffect } from '@typed/fp'
-import { identity, pipe } from 'fp-ts/lib/function'
-import { fold, isNone, none, some } from 'fp-ts/lib/Option'
+import { ask } from '@typed/fp/Env'
+import { Do } from '@typed/fp/FxEnv'
+import { identity, pipe } from 'fp-ts/function'
+import { isNone, match, none, some } from 'fp-ts/Option'
 import MagicString from 'magic-string'
 import { basename } from 'path'
 
@@ -16,7 +17,7 @@ const proxyJsExt = '.proxy.js'
 const rewriteContentHash = (document: Document) =>
   pipe(
     document.contentHash,
-    fold(
+    match(
       () => document,
       (hash) => ({
         ...document,
@@ -39,8 +40,8 @@ export function rewriteDocumentContents(
   sourceMaps: boolean,
   skipHashUpdate: boolean,
 ) {
-  return doEffect(function* () {
-    const { documentRegistry } = yield* ask<DocumentRegistryEnv>()
+  return Do(function* (_) {
+    const { documentRegistry } = yield* _(ask<DocumentRegistryEnv>())
 
     const { filePath, contents, sourceMap, isBase64Encoded } = document
     const filename = basename(filePath)

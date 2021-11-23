@@ -99,7 +99,7 @@ function determineReplacementPath({
   const relativePath = ensureRelative(relative(dirname(document.filePath), hashedPath))
   const absolutePath = ensureAbsolute(relative(directory, hashedPath))
   const pathToUse = baseUrl
-    ? applyOrigin(directory, dep.filePath, baseUrl)
+    ? applyOrigin(directory, hashedPath, baseUrl)
     : dep.specifier.startsWith('/')
     ? absolutePath
     : relativePath

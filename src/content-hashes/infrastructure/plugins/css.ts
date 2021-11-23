@@ -1,7 +1,7 @@
 import { Do } from '@typed/fp/FxEnv'
 import { Atrule, CssNode, parse, Url, walk } from 'css-tree'
 import { none, some } from 'fp-ts/Option'
-import { basename, dirname } from 'path'
+import { posix } from 'path'
 import { red, yellow } from 'typed-colors'
 
 import { debug } from '../../application/services/logging'
@@ -54,7 +54,7 @@ export function createCssPlugin({ mainFields = MAIN_FIELDS }: CssPluginOptions):
 }
 
 function findDependencies(document: Document, mainFields: readonly string[]): Document {
-  const filename = basename(document.filePath)
+  const filename = posix.basename(document.filePath)
   const ast = parse(document.contents, { filename, positions: true })
   const dependencies = new Set<Dependency>()
 
@@ -115,7 +115,7 @@ const parseAtRule = (
 
   if (specifier && !isExternalUrl(specifier.specifier)) {
     const specifierFilePath = resolvePackage({
-      directory: dirname(filePath),
+      directory: posix.dirname(filePath),
       moduleSpecifier: specifier.specifier,
       extensions: supportedExtensions,
       mainFields,
@@ -141,7 +141,7 @@ const parseUrl = (
 
   if (specifier && !isExternalUrl(specifier.specifier)) {
     const specifierFilePath = resolvePackage({
-      directory: dirname(filePath),
+      directory: posix.dirname(filePath),
       moduleSpecifier: specifier.specifier,
       extensions: supportedExtensions,
       mainFields,

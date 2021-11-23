@@ -1,7 +1,7 @@
 import { constant, constFalse, pipe } from 'fp-ts/function'
 import { fromNullable, none, Option } from 'fp-ts/Option'
-import { CompilerOptions } from 'ts-morph'
 import { createMatchPath } from 'tsconfig-paths'
+import { CompilerOptions } from 'typescript'
 
 const mainFields = ['module', 'jsnext:main', 'browser', 'main']
 const PATH_STAR_REGEX = /\/?\*$/

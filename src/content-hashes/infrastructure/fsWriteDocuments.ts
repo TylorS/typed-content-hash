@@ -2,7 +2,7 @@ import { RawSourceMap } from '@ampproject/remapping/dist/types/types'
 import { fromTask, zip } from '@typed/fp/Env'
 import { Do } from '@typed/fp/FxEnv'
 import { existsSync, promises } from 'fs'
-import { basename } from 'path'
+import { posix } from 'path'
 
 import { DocumentRegistry } from '../application/model'
 import { debug, info } from '../application/services/logging'
@@ -62,7 +62,11 @@ function tryToRewriteFilename(document: Document, hashedPath: string) {
 
       return {
         ...document,
-        contents: JSON.stringify({ ...raw, file: replaceHash(basename(document.filePath), extension, hash) }, null, 2),
+        contents: JSON.stringify(
+          { ...raw, file: replaceHash(posix.basename(document.filePath), extension, hash) },
+          null,
+          2,
+        ),
       }
     } catch (error) {
       yield* _(info(`Unable to rewrite sourceMap file name for ${document.filePath}`))

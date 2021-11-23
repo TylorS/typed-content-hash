@@ -1,6 +1,6 @@
 import MagicString from 'magic-string'
 import { EOL } from 'os'
-import { basename, extname } from 'path'
+import { posix } from 'path'
 
 const innerRegex = /[#@] sourceMappingURL=([^\s'"]*)/
 const regex = RegExp(
@@ -24,8 +24,8 @@ export function rewriteSourceMapUrl(ms: MagicString, hashedPath: string) {
   const contents = ms.original
   const sourceMapUrl = getSourceMapUrl(contents)
   const textRange = getSourceMapTextRange(contents)
-  const hashedUrl = basename(hashedPath)
-  const ext = extname(hashedUrl)
+  const hashedUrl = posix.basename(hashedPath)
+  const ext = posix.extname(hashedUrl)
   const hashedSourceMapUrl = (ext === '.css' ? cssTemplate(hashedUrl) : jsTemplate(hashedUrl)) + EOL
 
   if (!sourceMapUrl || !textRange) {

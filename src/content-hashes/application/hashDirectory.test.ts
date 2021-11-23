@@ -2,7 +2,7 @@ import { execWith, fromIO, provideSome, useSome } from '@typed/fp/Env'
 import { Do } from '@typed/fp/FxEnv'
 import { deepStrictEqual } from 'assert'
 import { pipe } from 'fp-ts/function'
-import { join } from 'path'
+import { posix } from 'path'
 
 import {
   createReadFilePath,
@@ -25,7 +25,7 @@ import { RewriteDependenciesEnv } from './services/rewriteDependencies'
 import { RewriteSourceMapUrlsEnv } from './services/rewriteSourceMapUrls'
 import { SortDocumentsEnv } from './services/toposortDocuments'
 
-const testDirectory = join(__dirname, '../../../test')
+const testDirectory = posix.join(__dirname, '../../../test')
 
 const expected = {
   'bar.d.ts': {

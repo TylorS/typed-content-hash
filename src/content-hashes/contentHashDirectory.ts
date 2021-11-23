@@ -4,7 +4,7 @@ import { Do } from '@typed/fp/FxEnv'
 import { run } from '@typed/fp/Resume'
 import { pipe } from 'fp-ts/function'
 import { isNone, isSome, none, Option, some } from 'fp-ts/Option'
-import { resolve } from 'path'
+import { posix } from 'path'
 import { gray } from 'typed-colors'
 
 import {
@@ -79,7 +79,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
   const program = Do(function* (_) {
     const registry = yield* _(hashDirectory(directory))
     const assetManifiestJson = yield* _(generateAssetManifest(registry))
-    const filePath = resolve(directory, assetManifest)
+    const filePath = posix.resolve(directory, assetManifest)
     const assetManifiestDoc: Document = {
       filePath: filePath,
       fileExtension: getFileExtension(filePath),
@@ -92,7 +92,7 @@ export function contentHashDirectory(options: ContentHashOptions): Promise<Docum
     const toWrite = new Map([...registry, [assetManifiestDoc.filePath, assetManifiestDoc]])
 
     if (registryFile) {
-      const filePath = resolve(directory, registryFile)
+      const filePath = posix.resolve(directory, registryFile)
 
       toWrite.set(filePath, {
         filePath,

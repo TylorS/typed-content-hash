@@ -1,5 +1,5 @@
 import { Do } from '@typed/fp/FxEnv'
-import { relative } from 'path'
+import { posix } from 'path'
 
 import { DocumentRegistry } from '../application/model'
 import { info } from '../application/services/logging'
@@ -22,7 +22,9 @@ export const generateAssetManfiestFromRegistry = (
       const from = document.filePath
       const to = getHashedPath(document, registry, hashLength)
 
-      manifest[relative(directory, from)] = baseUrl ? applyOrigin(directory, to, baseUrl) : relative(directory, to)
+      manifest[posix.relative(directory, from)] = baseUrl
+        ? applyOrigin(directory, to, baseUrl)
+        : posix.relative(directory, to)
     }
 
     return manifest as AssetManifest

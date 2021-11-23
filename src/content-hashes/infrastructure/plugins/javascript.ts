@@ -4,10 +4,10 @@ import builtinModules from 'builtin-modules'
 import { pipe } from 'fp-ts/function'
 import { isSome, map as mapOption, none, some } from 'fp-ts/Option'
 import { uniq } from 'fp-ts/ReadonlyArray'
-import { basename, dirname } from 'path'
-import { CompilerOptions, Project, SourceFile, StringLiteral, SyntaxKind } from 'ts-morph'
+import { posix } from 'path'
+import { CompilerOptions as TsMorphCompilerOptions, Project, SourceFile, StringLiteral, SyntaxKind } from 'ts-morph'
 import { red, yellow } from 'typed-colors'
-import { getDefaultCompilerOptions } from 'typescript'
+import { CompilerOptions, getDefaultCompilerOptions } from 'typescript'
 
 import { debug } from '../../application/services/logging'
 import { Dependency, Document } from '../../domain/model'
@@ -73,10 +73,13 @@ const getProxyReplacementExt = (ext: string): string => {
 }
 
 export const createJavascriptPlugin = (options: JavascriptPluginOptions): HashPlugin => {
-  const { compilerOptions = getDefaultCompilerOptions() as CompilerOptions, mainFields = MAIN_FIELDS } = options
+  const { compilerOptions = getDefaultCompilerOptions(), mainFields = MAIN_FIELDS } = options
   const pathsResolver = createResolveTsConfigPaths({ compilerOptions })
   const project = new Project({
-    compilerOptions: { ...compilerOptions, allowJs: true },
+    compilerOptions: {
+      ...compilerOptions,
+      allowJs: true,
+    } as TsMorphCompilerOptions,
     skipAddingFilesFromTsConfig: true,
     skipFileDependencyResolution: true,
     useInMemoryFileSystem: true,
@@ -148,7 +151,7 @@ function findDependencies(
   return pipe(
     stringLiterals.map(([literal, useBaseName]) => {
       const specifier = stripSpecifier(literal.getText())
-      const moduleSpecifier = useBaseName ? ensureRelative(basename(specifier)) : specifier
+      const moduleSpecifier = useBaseName ? ensureRelative(posix.basename(specifier)) : specifier
 
       if (specifiersToSkip.includes(moduleSpecifier)) {
         return E.of(none)
@@ -157,7 +160,7 @@ function findDependencies(
       return pipe(
         resolvePathFromSourceFile({
           moduleSpecifier,
-          directory: dirname(sourceFilePath),
+          directory: posix.dirname(sourceFilePath),
           pathsResolver,
           extensions: getExtensions(extension),
           mainFields,

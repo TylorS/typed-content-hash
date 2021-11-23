@@ -1,12 +1,12 @@
 import { Env, fromTask, zip } from '@typed/fp/Env'
 import { Do } from '@typed/fp/FxEnv'
 import { promises, statSync } from 'fs'
-import { join } from 'path'
+import { posix } from 'path'
 
 import { debug, LoggerEnv } from '../application/services/logging'
 
 const readdir = (directory: string) =>
-  fromTask(() => promises.readdir(directory).then((paths) => paths.map((p) => join(directory, p))))
+  fromTask(() => promises.readdir(directory).then((paths) => paths.map((p) => posix.join(directory, p))))
 
 const isFile = (path: string) => statSync(path).isFile()
 const isDirectory = (path: string) => statSync(path).isDirectory()

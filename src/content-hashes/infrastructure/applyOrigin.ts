@@ -1,5 +1,4 @@
-import { relative } from 'path'
-import { resolve } from 'url'
+import { posix } from 'path'
 
 /**
  * Generates an absolute URL given the build directory you're working from,
@@ -7,5 +6,5 @@ import { resolve } from 'url'
  * and the relative URL you have.
  */
 export function applyOrigin(buildDirectory: string, file: string, origin: string): string {
-  return resolve(origin, relative(buildDirectory, file))
+  return new URL(posix.relative(buildDirectory, file), origin).pathname
 }

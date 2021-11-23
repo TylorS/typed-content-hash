@@ -1,4 +1,4 @@
-import { extname } from 'path'
+import { posix } from 'path'
 
 export const getFileExtension = (filePath: string): string => {
   if (filePath.endsWith('.proxy.js')) {
@@ -13,5 +13,5 @@ export const getFileExtension = (filePath: string): string => {
     return '.d.ts'
   }
 
-  return extname(filePath)
+  return posix.extname(filePath)
 }

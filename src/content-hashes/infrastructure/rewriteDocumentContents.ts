@@ -4,7 +4,7 @@ import { Do } from '@typed/fp/FxEnv'
 import { identity, pipe } from 'fp-ts/function'
 import { isNone, match, none, some } from 'fp-ts/Option'
 import MagicString from 'magic-string'
-import { basename } from 'path'
+import { posix } from 'path'
 
 import { DocumentRegistryEnv } from '../application/model'
 import { Document, DocumentHash } from '../domain/model'
@@ -44,7 +44,7 @@ export function rewriteDocumentContents(
     const { documentRegistry } = yield* _(ask<DocumentRegistryEnv>())
 
     const { filePath, contents, sourceMap, isBase64Encoded } = document
-    const filename = basename(filePath)
+    const filename = posix.basename(filePath)
     const ext = getFileExtension(filename)
 
     // We don't rewrite source maps or base64 encoded documents

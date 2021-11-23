@@ -5,7 +5,7 @@ import { createHash } from 'crypto'
 import { pipe } from 'fp-ts/function'
 import { getOrElse, isSome, some } from 'fp-ts/Option'
 import MagicString from 'magic-string'
-import { dirname, relative } from 'path'
+import { posix } from 'path'
 
 import { DocumentRegistry, DocumentRegistryEnv } from '../application/model'
 import { debug, LoggerEnv } from '../application/services/logging'
@@ -99,8 +99,8 @@ function determineReplacementPath({
   const hashedPath = computedHashes.has(depDoc.filePath)
     ? replaceHash(depDoc.filePath, depDoc.fileExtension, computedHashes.get(depDoc.filePath)!.slice(0, hashLength))
     : getHashedPath(depDoc, documentRegistry, hashLength)
-  const relativePath = ensureRelative(relative(dirname(document.filePath), hashedPath))
-  const absolutePath = ensureAbsolute(relative(directory, hashedPath))
+  const relativePath = ensureRelative(posix.relative(posix.dirname(document.filePath), hashedPath))
+  const absolutePath = ensureAbsolute(posix.relative(directory, hashedPath))
   const pathToUse = baseUrl
     ? applyOrigin(directory, hashedPath, baseUrl)
     : dep.specifier.startsWith('/')

@@ -3,7 +3,7 @@
 import { pipe } from 'fp-ts/function'
 import { getOrElse, map } from 'fp-ts/Option'
 import { existsSync, statSync } from 'fs'
-import { resolve } from 'path'
+import { posix } from 'path'
 import { getDefaultCompilerOptions } from 'typescript'
 import yargs from 'yargs'
 
@@ -67,7 +67,7 @@ function getLogLevel(option: string) {
   }
 }
 
-const directory = resolve(process.cwd(), options.directory)
+const directory = posix.resolve(process.cwd(), options.directory)
 
 if (!existsSync(directory) || !statSync(directory).isDirectory()) {
   throw new Error(`Unable to find valid directory at ${directory}`)
@@ -78,7 +78,7 @@ const tsConfig = findTsConfig({ directory: process.cwd(), configFileName: option
 contentHashDirectory({
   directory,
   hashLength: options.hashLength ?? Infinity,
-  assetManifest: resolve(directory, options.assetManifest),
+  assetManifest: posix.resolve(directory, options.assetManifest),
   baseUrl: options.baseUrl,
   plugins: createDefaultPlugins({
     mainFields: options.mainFields,

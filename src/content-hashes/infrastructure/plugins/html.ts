@@ -2,7 +2,7 @@ import { Do } from '@typed/fp/FxEnv'
 import { isSome, none, some } from 'fp-ts/Option'
 import { getMonoid } from 'fp-ts/ReadonlyArray'
 import { foldMap, Tree } from 'fp-ts/Tree'
-import { dirname, extname, relative, resolve } from 'path'
+import { posix } from 'path'
 import { red, yellow } from 'typed-colors'
 
 import { debug } from '../../application/services/logging'
@@ -119,7 +119,7 @@ export function createHtmlPlugin({ buildDirectory, mainFields = MAIN_FIELDS }: H
 }
 
 function findDependencies(document: Document, buildDirectory: string, mainFields: readonly string[]) {
-  const directory = dirname(document.filePath)
+  const directory = posix.dirname(document.filePath)
   const ast = parse(document.contents, { ...parseDefaults, includePositions: true })
   const dependencies = ast
     .map(astToTree)
@@ -235,7 +235,7 @@ function formatDoubleQuotes(attr: HtmlAttribute): string {
 
 function ensureRelativeSpecifier(specifier: string, buildDirectory: string, directory: string) {
   if (specifier.startsWith('/')) {
-    return ensureRelative(relative(directory, resolve(buildDirectory, specifier.slice(1))))
+    return ensureRelative(posix.relative(directory, posix.resolve(buildDirectory, specifier.slice(1))))
   }
 
   return specifier
@@ -249,7 +249,7 @@ function resolveSpecifier(
   position: Position,
 ) {
   const relativeSpecifier = ensureRelativeSpecifier(specifier, buildDirectory, directory)
-  const hasFileExtension = isFileExtension(extname(relativeSpecifier))
+  const hasFileExtension = isFileExtension(posix.extname(relativeSpecifier))
 
   if (isExternalUrl(relativeSpecifier)) {
     return none
